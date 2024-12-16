@@ -2,10 +2,10 @@
 
 namespace App\Request;
 
+use App\Exception\ValidationFailedException;
 use ReflectionClass;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 abstract class AbstractJsonRequest
@@ -39,7 +39,7 @@ abstract class AbstractJsonRequest
     protected function validate(): void
     {
         $violations = $this->validator->validate($this);
-        if (count($violations) < 1) {
+        if (count($violations) === 0) {
             return;
         }
 
@@ -52,6 +52,6 @@ abstract class AbstractJsonRequest
             ];
         }
 
-        throw new BadRequestHttpException(json_encode(['errors' => $errors]));
+        throw new ValidationFailedException($errors);
     }
 }

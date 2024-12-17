@@ -36,4 +36,10 @@ class PlayerRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function deletePlayer(Player $player): void
+    {
+        $entityManager = $this->getEntityManager();
+        $entityManager->remove($player);
+        $entityManager->flush();
+    }
 }

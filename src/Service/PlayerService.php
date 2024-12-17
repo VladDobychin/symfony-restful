@@ -98,4 +98,22 @@ class PlayerService
         return $this->playerRepository->findPlayerById($id);
     }
 
+    public function deletePlayer(int $id): bool
+    {
+        $player = $this->playerRepository->findPlayerById($id);
+
+        if (!$player) {
+            $this->logger->warning("[Player] Attempted to delete non-existent player with ID: {$id}");
+            return false;
+        }
+
+        $this->logger->info("[Player] Deleting player '{$player->getFirstName()} {$player->getLastName()}' with ID: {$id}");
+
+        $this->playerRepository->deletePlayer($player);
+
+        $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
+
+        return true;
+    }
+
 }

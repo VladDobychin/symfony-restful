@@ -11,12 +11,15 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class PlayerController extends AbstractController
 {
+    public function __construct(private PlayerService $playerService)
+    {
+    }
+
     #[Route('/api/players', name: 'create_player', methods: ['POST'])]
     public function createPlayer(
         CreatePlayerRequest $request,
-        PlayerService $playerService
     ): JsonResponse {
-        $player = $playerService->createPlayer($request);
+        $player = $this->playerService->createPlayer($request);
 
         if (!$player) {
             return $this->json(['error' => 'Team not found'], Response::HTTP_BAD_REQUEST);
@@ -33,9 +36,9 @@ class PlayerController extends AbstractController
     }
 
     #[Route('/api/players/{id}', name: 'get_player_by_id', methods: ['GET'])]
-    public function getPlayerById(int $id, PlayerService $playerService): JsonResponse
+    public function getPlayerById(int $id): JsonResponse
     {
-        $player = $playerService->getPlayerById($id);
+        $player = $this->playerService->getPlayerById($id);
 
         if (!$player) {
             return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
@@ -55,9 +58,8 @@ class PlayerController extends AbstractController
     public function updatePlayer(
         int $id,
         UpdatePlayerRequest $request,
-        PlayerService $playerService
     ): JsonResponse {
-        $player = $playerService->updatePlayer($id, $request);
+        $player = $this->playerService->updatePlayer($id, $request);
 
         if (!$player) {
             return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
@@ -72,4 +74,17 @@ class PlayerController extends AbstractController
             'teamId' => $player->getTeam()->getId(),
         ]);
     }
+
+    #[Route('/api/players/{id}', name: 'delete_player', methods: ['DELETE'])]
+    public function deletePlayer(int $id): JsonResponse
+    {
+        $isDeleted = $this->playerService->deletePlayer($id);
+
+        if (!$isDeleted) {
+            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
 }

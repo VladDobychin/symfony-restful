@@ -3,17 +3,20 @@
 namespace App\Service;
 
 use App\Entity\Team;
+use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
 use App\Request\{CreateTeamRequest, UpdateTeamRequest};
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class TeamService
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TeamRepository $teamRepository,
-        private LoggerInterface $logger
+        private LoggerInterface $logger,
+        private EventDispatcherInterface $eventDispatcher
     ) {
     }
 
@@ -58,18 +61,11 @@ class TeamService
             return null;
         }
 
-        if (isset($request->name)) {
-            $team->setName($request->name);
-        }
-        if (isset($request->city)) {
-            $team->setCity($request->city);
-        }
-        if (isset($request->yearFounded)) {
-            $team->setYearFounded((int)$request->yearFounded);
-        }
-        if (isset($request->stadiumName)) {
-            $team->setStadiumName($request->stadiumName);
-        }
+        $oldCity = $team->getCity();
+
+        $this->applyTeamUpdates($team, $request);
+
+        $this->entityManager->flush();
 
         $this->logger->info('[Team] was updated successfully', [
             'id' => $team->getId(),
@@ -79,7 +75,9 @@ class TeamService
             'stadiumName' => $team->getStadiumName(),
         ]);
 
-        $this->entityManager->flush();
+        if ($team->getCity() !== $oldCity) {
+            $this->eventDispatcher->dispatch(new TeamRelocatedEvent($team->getId(), $oldCity));
+        }
 
         return $team;
     }
@@ -100,5 +98,24 @@ class TeamService
         $this->logger->info("Team '{$team->getName()}' with ID: {$id} has been deleted successfully");
 
         return true;
+    }
+
+    private function applyTeamUpdates(Team $team, UpdateTeamRequest $request): void
+    {
+        if (isset($request->name)) {
+            $team->setName($request->name);
+        }
+
+        if (isset($request->city)) {
+            $team->setCity($request->city);
+        }
+
+        if (isset($request->yearFounded)) {
+            $team->setYearFounded((int)$request->yearFounded);
+        }
+
+        if (isset($request->stadiumName)) {
+            $team->setStadiumName($request->stadiumName);
+        }
     }
 }

@@ -31,4 +31,20 @@ class TeamController extends AbstractController
             'stadiumName' => $team->getStadiumName(),
         ], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/teams', name: 'get_teams', methods: ['GET'])]
+    public function getTeams(TeamService $teamService): JsonResponse
+    {
+        $teams = $teamService->getAllTeams();
+
+        $teamData = array_map(fn($team) => [
+            'id' => $team->getId(),
+            'name' => $team->getName(),
+            'city' => $team->getCity(),
+            'yearFounded' => $team->getYearFounded(),
+            'stadiumName' => $team->getStadiumName(),
+        ], $teams);
+
+        return $this->json($teamData);
+    }
 }

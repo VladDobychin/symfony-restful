@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Request\CreateTeamRequest;
+use App\Request\{CreateTeamRequest, UpdateTeamRequest};
 use App\Service\TeamService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -11,17 +11,13 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class TeamController extends AbstractController
 {
+    // TODO: research how to take care of trailing slashes
     #[Route('/api/teams', name: 'create_team', methods: ['POST'])]
     public function createTeam(
         CreateTeamRequest $request,
         TeamService $teamService
     ): JsonResponse {
-        $team = $teamService->createTeam(
-            $request->name,
-            $request->city,
-            $request->yearFounded,
-            $request->stadiumName
-        );
+        $team = $teamService->createTeam($request);
 
         return $this->json([
             'id' => $team->getId(),
@@ -52,6 +48,27 @@ class TeamController extends AbstractController
     public function getTeamById(int $id, TeamService $teamService): JsonResponse
     {
         $team = $teamService->getTeamById($id);
+
+        if (!$team) {
+            return $this->json(['error' => 'Team not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $team->getId(),
+            'name' => $team->getName(),
+            'city' => $team->getCity(),
+            'yearFounded' => $team->getYearFounded(),
+            'stadiumName' => $team->getStadiumName(),
+        ]);
+    }
+
+    #[Route('/api/teams/{id}', name: 'update_team', methods: ['PUT'])]
+    public function updateTeam(
+        int $id,
+        UpdateTeamRequest $request,
+        TeamService $teamService
+    ): JsonResponse {
+        $team = $teamService->updateTeam($id, $request);
 
         if (!$team) {
             return $this->json(['error' => 'Team not found'], Response::HTTP_NOT_FOUND);

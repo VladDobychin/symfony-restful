@@ -47,4 +47,22 @@ class TeamController extends AbstractController
 
         return $this->json($teamData);
     }
+
+    #[Route('/api/teams/{id}', name: 'get_team_by_id', methods: ['GET'])]
+    public function getTeamById(int $id, TeamService $teamService): JsonResponse
+    {
+        $team = $teamService->getTeamById($id);
+
+        if (!$team) {
+            return $this->json(['error' => 'Team not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $team->getId(),
+            'name' => $team->getName(),
+            'city' => $team->getCity(),
+            'yearFounded' => $team->getYearFounded(),
+            'stadiumName' => $team->getStadiumName(),
+        ]);
+    }
 }

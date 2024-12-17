@@ -43,4 +43,9 @@ class TeamService
         return $this->teamRepository
             ->findAllTeams();
     }
+
+    public function getTeamById(int $id): ?Team
+    {
+        return $this->teamRepository->findTeamById($id);
+    }
 }

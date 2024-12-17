@@ -82,4 +82,17 @@ class TeamController extends AbstractController
             'stadiumName' => $team->getStadiumName(),
         ]);
     }
+
+    #[Route('/api/teams/{id}', name: 'delete_team', methods: ['DELETE'])]
+    public function deleteTeam(int $id, TeamService $teamService): JsonResponse
+    {
+        $isDeleted = $teamService->deleteTeam($id);
+
+        if (!$isDeleted) {
+            return $this->json(['error' => 'Team not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
 }

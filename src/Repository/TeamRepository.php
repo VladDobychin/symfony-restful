@@ -32,4 +32,12 @@ class TeamRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function deleteTeam(Team $team): void
+    {
+        $entityManager = $this->getEntityManager();
+        $entityManager->remove($team);
+        $entityManager->flush();
+    }
+
 }

@@ -83,4 +83,22 @@ class TeamService
 
         return $team;
     }
+
+    public function deleteTeam(int $id): bool
+    {
+        $team = $this->teamRepository->findTeamById($id);
+
+        if (!$team) {
+            $this->logger->warning("Attempted to delete non-existent team with ID: {$id}");
+            return false;
+        }
+
+        $this->logger->info("Deleting team '{$team->getName()}' with ID: {$id}");
+
+        $this->teamRepository->deleteTeam($team);
+
+        $this->logger->info("Team '{$team->getName()}' with ID: {$id} has been deleted successfully");
+
+        return true;
+    }
 }

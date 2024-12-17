@@ -60,4 +60,10 @@ class PlayerService
     {
         return $this->playerRepository->findPlayersByTeam($team);
     }
+
+    public function getPlayerById(int $id): ?Player
+    {
+        return $this->playerRepository->findPlayerById($id);
+    }
+
 }

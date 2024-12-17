@@ -67,7 +67,8 @@ class TeamController extends AbstractController
     #[Route('/api/teams/{id}', name: 'update_team', methods: ['PUT'])]
     public function updateTeam(
         int $id,
-        UpdateTeamRequest $request): JsonResponse {
+        UpdateTeamRequest $request
+    ): JsonResponse {
         $team = $this->teamService->updateTeam($id, $request);
 
         if (!$team) {

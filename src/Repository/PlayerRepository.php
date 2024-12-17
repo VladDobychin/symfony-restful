@@ -26,4 +26,14 @@ class PlayerRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findPlayerById(int $id): ?Player
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 }

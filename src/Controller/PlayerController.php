@@ -31,4 +31,24 @@ class PlayerController extends AbstractController
             'teamId' => $player->getTeam()->getId(),
         ], Response::HTTP_CREATED);
     }
+
+    #[Route('/api/players/{id}', name: 'get_player_by_id', methods: ['GET'])]
+    public function getPlayerById(int $id, PlayerService $playerService): JsonResponse
+    {
+        $player = $playerService->getPlayerById($id);
+
+        if (!$player) {
+            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $player->getId(),
+            'firstName' => $player->getFirstName(),
+            'lastName' => $player->getLastName(),
+            'age' => $player->getAge(),
+            'position' => $player->getPosition(),
+            'teamId' => $player->getTeam()->getId(),
+        ]);
+    }
+
 }

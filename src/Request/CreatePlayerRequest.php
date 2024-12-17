@@ -13,6 +13,10 @@ class CreatePlayerRequest extends AbstractJsonRequest
         minMessage: 'First name must be at least {{ limit }} characters long.',
         maxMessage: 'First name cannot exceed {{ limit }} characters.'
     )]
+    #[Assert\Regex(
+        pattern: "/^[a-zA-Z\s'-]+$/",
+        message: 'The first name must only contain letters, spaces, apostrophes, and hyphens.'
+    )]
     public readonly string $firstName;
 
     #[Assert\NotBlank]
@@ -21,6 +25,10 @@ class CreatePlayerRequest extends AbstractJsonRequest
         max: 255,
         minMessage: 'Last name must be at least {{ limit }} characters long.',
         maxMessage: 'Last name cannot exceed {{ limit }} characters.'
+    )]
+    #[Assert\Regex(
+        pattern: "/^[a-zA-Z\s'-]+$/",
+        message: 'The last name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
     public readonly string $lastName;
 

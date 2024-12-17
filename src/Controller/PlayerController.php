@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Request\CreatePlayerRequest;
+use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,4 +51,25 @@ class PlayerController extends AbstractController
         ]);
     }
 
+    #[Route('/api/players/{id}', name: 'update_player', methods: ['PUT'])]
+    public function updatePlayer(
+        int $id,
+        UpdatePlayerRequest $request,
+        PlayerService $playerService
+    ): JsonResponse {
+        $player = $playerService->updatePlayer($id, $request);
+
+        if (!$player) {
+            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $player->getId(),
+            'firstName' => $player->getFirstName(),
+            'lastName' => $player->getLastName(),
+            'age' => $player->getAge(),
+            'position' => $player->getPosition(),
+            'teamId' => $player->getTeam()->getId(),
+        ]);
+    }
 }

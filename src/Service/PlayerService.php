@@ -7,7 +7,7 @@ use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
-use App\Request\CreatePlayerRequest;
+use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Psr\Log\LoggerInterface;
@@ -55,6 +55,38 @@ class PlayerService
             throw new PlayerLimitExceededException();
         }
     }
+
+    public function updatePlayer(int $id, UpdatePlayerRequest $request): ?Player
+    {
+        $player = $this->playerRepository->findPlayerById($id);
+
+        if (!$player) {
+            return null;
+        }
+
+        if (isset($request->firstName)) {
+            $player->setFirstName($request->firstName);
+        }
+        if (isset($request->lastName)) {
+            $player->setLastName($request->lastName);
+        }
+        if (isset($request->age)) {
+            $player->setAge($request->age);
+        }
+        if (isset($request->position)) {
+            $player->setPosition($request->position);
+        }
+
+        $this->logger->info('[Player] was updated successfully', [
+            'id' => $player->getId(),
+            'name' => "{$player->getFirstName()} {$player->getLastName()}",
+        ]);
+
+        $this->entityManager->flush();
+
+        return $player;
+    }
+
 
     public function getPlayersByTeam(Team $team): array
     {

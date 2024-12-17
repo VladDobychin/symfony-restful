@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Player;
+use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
+use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Request\CreatePlayerRequest;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,6 +17,7 @@ class PlayerService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TeamRepository $teamRepository,
+        private PlayerRepository $playerRepository,
         private LoggerInterface $logger
     ) {
     }
@@ -51,5 +54,10 @@ class PlayerService
             $this->logger->warning("[Player] Failed to add player - {$e->getMessage()}");
             throw new PlayerLimitExceededException();
         }
+    }
+
+    public function getPlayersByTeam(Team $team): array
+    {
+        return $this->playerRepository->findPlayersByTeam($team);
     }
 }

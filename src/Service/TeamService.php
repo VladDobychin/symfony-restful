@@ -22,7 +22,7 @@ class TeamService
         $team = new Team();
         $team->setName($request->name)
             ->setCity($request->city)
-            ->setYearFounded($request->yearFounded)
+            ->setYearFounded((int)$request->yearFounded)
             ->setStadiumName($request->stadiumName);
 
         $this->entityManager->persist($team);

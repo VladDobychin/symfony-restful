@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\CreateTeamDataInterface;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
@@ -20,13 +21,13 @@ class TeamService
     ) {
     }
 
-    public function createTeam(CreateTeamRequest $request): Team
+    public function createTeam(CreateTeamDataInterface $request): Team
     {
         $team = new Team();
-        $team->setName($request->name)
-            ->setCity($request->city)
-            ->setYearFounded((int)$request->yearFounded)
-            ->setStadiumName($request->stadiumName);
+        $team->setName($request->getName())
+            ->setCity($request->getCity())
+            ->setYearFounded($request->getYearFounded())
+            ->setStadiumName($request->getStadiumName());
 
         $this->entityManager->persist($team);
         $this->entityManager->flush();

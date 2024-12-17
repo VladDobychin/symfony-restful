@@ -1,5 +1,6 @@
 <?php
 
+// TODO: Move to EventListener
 namespace App\EventSubscriber;
 
 use App\Exception\ApiException;

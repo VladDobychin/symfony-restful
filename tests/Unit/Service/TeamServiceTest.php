@@ -114,9 +114,9 @@ class TeamServiceTest extends TestCase
         $testDto = new TestCreateTeamData('Team B', 'City B', 2001, 'Stadium B');
 
         $this->expectFindTeamById($team->getId(), $team);
-
         $this->entityManager->expects($this->once())
             ->method('flush');
+        $this->expectLog('[Team] was updated successfully');
 
         $updatedTeam = $this->teamService->updateTeam($team->getId(), $testDto);
 
@@ -139,6 +139,39 @@ class TeamServiceTest extends TestCase
         $updatedTeam = $this->teamService->updateTeam(99, $testDto);
 
         $this->assertNull($updatedTeam, 'Expected null when updating a non-existent team.');
+    }
+
+    /**
+     * @covers \App\Service\TeamService::deleteTeam
+     */
+    public function testDeleteTeam()
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+
+        $this->expectFindTeamById($team->getId(), $team);
+        $this->teamRepository->expects($this->once())
+            ->method('deleteTeam')
+            ->with($this->isInstanceOf(Team::class));
+
+        $isDeleted = $this->teamService->deleteTeam($team->getId());
+
+        $this->assertTrue($isDeleted);
+    }
+
+    /**
+     * @covers \App\Service\TeamService::deleteTeam
+     */
+    public function testDeleteTeamNotFound(): void
+    {
+        $this->expectFindTeamById(99, null);
+
+        $this->logger->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Attempted to delete non-existent team'));
+
+        $isDeleted = $this->teamService->deleteTeam(99);
+
+        $this->assertFalse($isDeleted);
     }
 
     private function expectEntityManager(): void

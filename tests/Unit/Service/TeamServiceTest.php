@@ -42,21 +42,8 @@ class TeamServiceTest extends TestCase
     {
         $testDto = new TestCreateTeamData('Team A', 'City A', 2000, 'Stadium A');
 
-        $team = new Team();
-        $team->setName('Team A')
-            ->setCity('City A')
-            ->setYearFounded(2000)
-            ->setStadiumName('Stadium A');
-
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(Team::class));
-        $this->entityManager->expects($this->once())
-            ->method('flush');
-
-        $this->logger->expects($this->once())
-            ->method('info')
-            ->with($this->stringContains('[Team] created successfully'));
+        $this->expectEntityManager();
+        $this->expectLog('[Team] created successfully');
 
         $createdTeam = $this->teamService->createTeam($testDto);
 
@@ -72,22 +59,8 @@ class TeamServiceTest extends TestCase
      */
     public function testGetAllTeams(): void
     {
-        $team1 = new Team();
-        $team1->setName('Team A')
-            ->setCity('City A')
-            ->setYearFounded(2000)
-            ->setStadiumName('Stadium A');
-
-        $team2 = new Team();
-        $team2->setName('Team B')
-            ->setCity('City B')
-            ->setYearFounded(2005)
-            ->setStadiumName('Stadium B');
-
-        $reflection = new ReflectionClass(Team::class);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setValue($team1, 1);
-        $idProperty->setValue($team2, 2);
+        $team1 = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $team2 = $this->createTeam(2, 'Team B', 'City B', 2001, 'Stadium B');
 
         $this->teamRepository->expects($this->once())
             ->method('findAllTeams')
@@ -96,10 +69,10 @@ class TeamServiceTest extends TestCase
         $teams = $this->teamService->getAllTeams();
 
         $this->assertCount(2, $teams);
-        $this->assertEquals(1, $teams[0]->getId());
-        $this->assertEquals('Team A', $teams[0]->getName());
-        $this->assertEquals(2, $teams[1]->getId());
-        $this->assertEquals('Team B', $teams[1]->getName());
+        $this->assertEquals($team1->getId(), $teams[0]->getId());
+        $this->assertEquals($team1->getName(), $teams[0]->getName());
+        $this->assertEquals($team2->getId(), $teams[1]->getId());
+        $this->assertEquals($team2->getName(), $teams[1]->getName());
     }
 
     /**
@@ -107,28 +80,17 @@ class TeamServiceTest extends TestCase
      */
     public function testGetTeamById(): void
     {
-        $team = new Team();
-        $team->setName('Team A')
-            ->setCity('City A')
-            ->setYearFounded(2000)
-            ->setStadiumName('Stadium A');
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
 
-        $reflection = new ReflectionClass(Team::class);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setValue($team, 1);
+        $this->expectFindTeamById($team->getId(), $team);
 
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with($team->getId())
-            ->willReturn($team);
+        $retrievedTeam = $this->teamService->getTeamById($team->getId());
 
-        $team = $this->teamService->getTeamById($team->getId());
-
-        $this->assertEquals(1, $team->getId());
-        $this->assertEquals('Team A', $team->getName());
-        $this->assertEquals('City A', $team->getCity());
-        $this->assertEquals(2000, $team->getYearFounded());
-        $this->assertEquals('Stadium A', $team->getStadiumName());
+        $this->assertEquals($team->getId(), $retrievedTeam->getId());
+        $this->assertEquals($team->getName(), $retrievedTeam->getName());
+        $this->assertEquals($team->getCity(), $retrievedTeam->getCity());
+        $this->assertEquals($team->getYearFounded(), $retrievedTeam->getYearFounded());
+        $this->assertEquals($team->getStadiumName(), $retrievedTeam->getStadiumName());
     }
 
     /**
@@ -136,14 +98,11 @@ class TeamServiceTest extends TestCase
      */
     public function testGetTeamByIdNotFound(): void
     {
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with(99)
-            ->willReturn(null);
+        $this->expectFindTeamById(99, null);
 
         $team = $this->teamService->getTeamById(99);
 
-        $this->assertNull($team);
+        $this->assertNull($team, 'Assert null when retrieving a team by non-existent id');
     }
 
     /**
@@ -151,22 +110,13 @@ class TeamServiceTest extends TestCase
      */
     public function testUpdateTeam(): void
     {
-        $team = new Team();
-        $team->setName('Team A')
-            ->setCity('City A')
-            ->setYearFounded(2000)
-            ->setStadiumName('Stadium A');
-
-        $reflection = new ReflectionClass(Team::class);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setValue($team, 1);
-
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
         $testDto = new TestCreateTeamData('Team B', 'City B', 2001, 'Stadium B');
 
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with($team->getId())
-            ->willReturn($team);
+        $this->expectFindTeamById($team->getId(), $team);
+
+        $this->entityManager->expects($this->once())
+            ->method('flush');
 
         $updatedTeam = $this->teamService->updateTeam($team->getId(), $testDto);
 
@@ -184,13 +134,49 @@ class TeamServiceTest extends TestCase
     {
         $testDto = new TestCreateTeamData('Team B', 'City B', 2001, 'Stadium B');
 
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with(99)
-            ->willReturn(null);
+        $this->expectFindTeamById(99, null);
 
         $updatedTeam = $this->teamService->updateTeam(99, $testDto);
 
         $this->assertNull($updatedTeam, 'Expected null when updating a non-existent team.');
+    }
+
+    private function expectEntityManager(): void
+    {
+        $this->entityManager->expects($this->once())
+            ->method('persist')
+            ->with($this->isInstanceOf(Team::class));
+        $this->entityManager->expects($this->once())
+            ->method('flush');
+    }
+
+    private function expectLog(string $message, string $level = 'info'): void
+    {
+        $this->logger->expects($this->once())
+            ->method($level)
+            ->with($this->stringContains($message));
+    }
+
+    private function createTeam(int $id, string $name, string $city, int $yearFounded, string $stadiumName): Team
+    {
+        $team = new Team();
+        $team->setName($name)
+            ->setCity($city)
+            ->setYearFounded($yearFounded)
+            ->setStadiumName($stadiumName);
+
+        $reflection = new ReflectionClass(Team::class);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($team, $id);
+
+        return $team;
+    }
+
+    private function expectFindTeamById(int $id, mixed $return): void
+    {
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with($id)
+            ->willReturn($return);
     }
 }

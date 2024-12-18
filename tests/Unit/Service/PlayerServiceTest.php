@@ -167,6 +167,50 @@ class PlayerServiceTest extends TestCase
         $this->assertNull($result);
     }
 
+    /**
+     * @covers \App\Service\PlayerService::updatePlayer
+     */
+    public function testUpdatePlayer(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $player = $this->createPlayer(1, 'John', 'Doe', 25, 'Forward', $team);
+
+        $updatedData = new TestCreatePlayerData('Jane', 'Smith', 30, 'Midfielder', 1);
+
+        $this->expectFindPlayerById($player->getId(), $player);
+
+        $this->expectLog('[Player] was updated successfully');
+
+        $this->entityManager->expects($this->once())
+            ->method('flush');
+
+        $updatedPlayer = $this->playerService->updatePlayer($player->getId(), $updatedData);
+
+        $this->assertInstanceOf(Player::class, $updatedPlayer);
+        $this->assertEquals($updatedData->getFirstName(), $updatedPlayer->getFirstName());
+        $this->assertEquals($updatedData->getLastName(), $updatedPlayer->getLastName());
+        $this->assertEquals($updatedData->getAge(), $updatedPlayer->getAge());
+        $this->assertEquals($updatedData->getPosition(), $updatedPlayer->getPosition());
+    }
+
+    /**
+     * @covers \App\Service\PlayerService::updatePlayer
+     */
+    public function testUpdatePlayerNotFound(): void
+    {
+        $playerId = 99;
+        $updatedData = new TestCreatePlayerData('Jane', 'Smith', 30, 'Midfielder', 1);
+
+        $this->expectFindPlayerById($playerId, null);
+
+        $this->logger->expects($this->never())->method('info');
+        $this->entityManager->expects($this->never())->method('flush');
+
+        $updatedPlayer = $this->playerService->updatePlayer($playerId, $updatedData);
+
+        $this->assertNull($updatedPlayer);
+    }
+
     private function createPlayer(
         int $id,
         string $firstName,

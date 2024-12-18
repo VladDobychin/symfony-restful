@@ -135,6 +135,38 @@ class PlayerServiceTest extends TestCase
         $this->playerService->createPlayer($playerData);
     }
 
+    /**
+     * @covers \App\Service\PlayerService::getPlayerById
+     */
+    public function testGetPlayerByIdSuccessfully(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $player = $this->createPlayer(1, 'John', 'Doe', 25, 'Forward', $team);
+
+        $this->expectFindPlayerById($player->getId(), $player);
+
+        $result = $this->playerService->getPlayerById($player->getId());
+
+        $this->assertInstanceOf(Player::class, $result);
+        $this->assertEquals($player->getId(), $result->getId());
+        $this->assertEquals($player->getFirstName(), $result->getFirstName());
+        $this->assertEquals($player->getLastName(), $result->getLastName());
+        $this->assertSame($team, $result->getTeam());
+    }
+
+    /**
+     * @covers \App\Service\PlayerService::getPlayerById
+     */
+    public function testGetPlayerByIdNotFound(): void
+    {
+        $playerId = 99;
+
+        $this->expectFindPlayerById($playerId, null);
+        $result = $this->playerService->getPlayerById($playerId);
+
+        $this->assertNull($result);
+    }
+
     private function createPlayer(
         int $id,
         string $firstName,
@@ -196,6 +228,14 @@ class PlayerServiceTest extends TestCase
     {
         $this->teamRepository->expects($this->once())
             ->method('findTeamById')
+            ->with($id)
+            ->willReturn($return);
+    }
+
+    private function expectFindPlayerById(int $id, mixed $return): void
+    {
+        $this->playerRepository->expects($this->once())
+            ->method('findPlayerById')
             ->with($id)
             ->willReturn($return);
     }

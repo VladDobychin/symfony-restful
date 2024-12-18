@@ -57,7 +57,7 @@ class PlayerService
         }
     }
 
-    public function updatePlayer(int $id, UpdatePlayerRequest $request): ?Player
+    public function updatePlayer(int $id, PlayerDataInterface $request): ?Player
     {
         $player = $this->playerRepository->findPlayerById($id);
 
@@ -65,17 +65,17 @@ class PlayerService
             return null;
         }
 
-        if (isset($request->firstName)) {
-            $player->setFirstName($request->firstName);
+        if ($request->getFirstName() !== null) {
+            $player->setFirstName($request->getFirstName());
         }
-        if (isset($request->lastName)) {
-            $player->setLastName($request->lastName);
+        if ($request->getLastName() !== null) {
+            $player->setLastName($request->getLastName());
         }
-        if (isset($request->age)) {
-            $player->setAge($request->age);
+        if ($request->getAge() !== null) {
+            $player->setAge($request->getAge());
         }
-        if (isset($request->position)) {
-            $player->setPosition($request->position);
+        if ($request->getPosition()) {
+            $player->setPosition($request->getPosition());
         }
 
         $this->logger->info('[Player] was updated successfully', [

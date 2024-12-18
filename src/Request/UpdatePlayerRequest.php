@@ -2,9 +2,10 @@
 
 namespace App\Request;
 
+use App\DTO\PlayerDataInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class UpdatePlayerRequest extends AbstractJsonRequest
+class UpdatePlayerRequest extends AbstractJsonRequest implements PlayerDataInterface
 {
     #[Assert\Length(
         min: 2,
@@ -16,7 +17,7 @@ class UpdatePlayerRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The first name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly ?string $firstName;
+    private readonly ?string $firstName;
 
     #[Assert\Length(
         min: 2,
@@ -28,14 +29,14 @@ class UpdatePlayerRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The last name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly ?string $lastName;
+    private readonly ?string $lastName;
 
     #[Assert\Range(
         notInRangeMessage: 'The age must be between {{ min }} and {{ max }}.',
         min: 16,
         max: 50
     )]
-    public readonly ?int $age;
+    private readonly ?int $age;
 
     #[Assert\Length(
         min: 2,
@@ -43,5 +44,31 @@ class UpdatePlayerRequest extends AbstractJsonRequest
         minMessage: 'The position must be at least {{ limit }} characters long.',
         maxMessage: 'The position cannot exceed {{ limit }} characters.'
     )]
-    public readonly ?string $position;
+    private readonly ?string $position;
+
+
+    public function getFirstName(): string
+    {
+        return $this->firstName;
+    }
+
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function getPosition(): string
+    {
+        return $this->position;
+    }
+
+    public function getTeamId(): ?int
+    {
+        return null;
+    }
 }

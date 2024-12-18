@@ -7,25 +7,18 @@ use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
 use App\Service\TeamService;
 use App\Tests\Unit\DTO\TestCreateTeamData;
-use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
-use ReflectionClass;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-class TeamServiceTest extends TestCase
+class TeamServiceTest extends BaseServiceTest
 {
-    private TeamService $teamService;
-    private $entityManager;
-    private $teamRepository;
-    private $logger;
-    private $eventDispatcher;
+    protected TeamService $teamService;
+    protected $teamRepository;
+    protected $eventDispatcher;
 
     protected function setUp(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        parent::setUp();
         $this->teamRepository = $this->createMock(TeamRepository::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->teamService = new TeamService(
@@ -203,44 +196,5 @@ class TeamServiceTest extends TestCase
         $isDeleted = $this->teamService->deleteTeam(99);
 
         $this->assertFalse($isDeleted);
-    }
-
-    private function expectEntityManager($method1, $method2, $class): void
-    {
-        $this->entityManager->expects($this->once())
-            ->method($method1)
-            ->with($this->isInstanceOf($class));
-        $this->entityManager->expects($this->once())
-            ->method($method2);
-    }
-
-    private function expectLog(string $message, string $level = 'info'): void
-    {
-        $this->logger->expects($this->once())
-            ->method($level)
-            ->with($this->stringContains($message));
-    }
-
-    private function createTeam(int $id, string $name, string $city, int $yearFounded, string $stadiumName): Team
-    {
-        $team = new Team();
-        $team->setName($name)
-            ->setCity($city)
-            ->setYearFounded($yearFounded)
-            ->setStadiumName($stadiumName);
-
-        $reflection = new ReflectionClass(Team::class);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setValue($team, $id);
-
-        return $team;
-    }
-
-    private function expectFindTeamById(int $id, mixed $return): void
-    {
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with($id)
-            ->willReturn($return);
     }
 }

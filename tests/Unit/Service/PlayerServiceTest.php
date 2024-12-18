@@ -9,25 +9,19 @@ use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Service\PlayerService;
 use App\Tests\Unit\DTO\TestCreatePlayerData;
-use Doctrine\ORM\EntityManagerInterface;
-use PHPUnit\Framework\TestCase;
-use Psr\Log\LoggerInterface;
 use ReflectionClass;
 
-class PlayerServiceTest extends TestCase
+class PlayerServiceTest extends BaseServiceTest
 {
-    private PlayerService $playerService;
-    private $entityManager;
-    private $playerRepository;
-    private $teamRepository;
-    private $logger;
+    protected PlayerService $playerService;
+    protected $playerRepository;
+    protected $teamRepository;
 
     protected function setUp(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        parent::setUp();
         $this->playerRepository = $this->createMock(PlayerRepository::class);
         $this->teamRepository = $this->createMock(TeamRepository::class);
-        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->playerService = new PlayerService(
             $this->entityManager,
@@ -269,49 +263,6 @@ class PlayerServiceTest extends TestCase
         $idProperty->setValue($player, $id);
 
         return $player;
-    }
-
-    // Duplicate
-    private function createTeam(int $id, string $name, string $city, int $yearFounded, string $stadiumName): Team
-    {
-        $team = new Team();
-        $team->setName($name)
-            ->setCity($city)
-            ->setYearFounded($yearFounded)
-            ->setStadiumName($stadiumName);
-
-        $reflection = new ReflectionClass(Team::class);
-        $idProperty = $reflection->getProperty('id');
-        $idProperty->setValue($team, $id);
-
-        return $team;
-    }
-
-    // Duplicate
-    private function expectLog(string $message, string $level = 'info'): void
-    {
-        $this->logger->expects($this->once())
-            ->method($level)
-            ->with($this->stringContains($message));
-    }
-
-    // Duplicate
-    private function expectEntityManager($method1, $method2, $class): void
-    {
-        $this->entityManager->expects($this->once())
-            ->method($method1)
-            ->with($this->isInstanceOf($class));
-        $this->entityManager->expects($this->once())
-            ->method($method2);
-    }
-
-    // Duplicate
-    private function expectFindTeamById(int $id, mixed $return): void
-    {
-        $this->teamRepository->expects($this->once())
-            ->method('findTeamById')
-            ->with($id)
-            ->willReturn($return);
     }
 
     private function expectFindPlayerById(int $id, mixed $return): void

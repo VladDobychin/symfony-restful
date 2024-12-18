@@ -102,4 +102,48 @@ class TeamServiceTest extends TestCase
         $this->assertEquals('Team B', $teams[1]->getName());
     }
 
+    /**
+     * @covers \App\Service\TeamService::getTeamById
+     */
+    public function testGetTeamById(): void
+    {
+        $team = new Team();
+        $team->setName('Team A')
+            ->setCity('City A')
+            ->setYearFounded(2000)
+            ->setStadiumName('Stadium A');
+
+        $reflection = new ReflectionClass(Team::class);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($team, 1);
+
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with($team->getId())
+            ->willReturn($team);
+
+        $team = $this->teamService->getTeamById($team->getId());
+
+        $this->assertEquals(1, $team->getId());
+        $this->assertEquals('Team A', $team->getName());
+        $this->assertEquals('City A', $team->getCity());
+        $this->assertEquals(2000, $team->getYearFounded());
+        $this->assertEquals('Stadium A', $team->getStadiumName());
+    }
+
+    /**
+     * @covers \App\Service\TeamService::getTeamById
+     */
+    public function testGetTeamByIdNotFound(): void
+    {
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with(99)
+            ->willReturn(null);
+
+        $team = $this->teamService->getTeamById(99);
+
+        $this->assertNull($team);
+    }
+
 }

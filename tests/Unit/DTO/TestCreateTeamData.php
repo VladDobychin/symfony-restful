@@ -2,9 +2,9 @@
 
 namespace App\Tests\Unit\DTO;
 
-use App\DTO\CreateTeamDataInterface;
+use App\DTO\TeamDataInterface;
 
-class TestCreateTeamData implements CreateTeamDataInterface
+class TestCreateTeamData implements TeamDataInterface
 {
     public function __construct(
         private string $name,

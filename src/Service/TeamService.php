@@ -54,6 +54,7 @@ class TeamService
         return $this->teamRepository->findTeamById($id);
     }
 
+    // TODO: handle case when no fields are supplied
     public function updateTeam(int $id, TeamDataInterface $request): ?Team
     {
         $team = $this->teamRepository->findTeamById($id);

@@ -146,4 +146,51 @@ class TeamServiceTest extends TestCase
         $this->assertNull($team);
     }
 
+    /**
+     * @covers \App\Service\TeamService::updateTeam
+     */
+    public function testUpdateTeam(): void
+    {
+        $team = new Team();
+        $team->setName('Team A')
+            ->setCity('City A')
+            ->setYearFounded(2000)
+            ->setStadiumName('Stadium A');
+
+        $reflection = new ReflectionClass(Team::class);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($team, 1);
+
+        $testDto = new TestCreateTeamData('Team B', 'City B', 2001, 'Stadium B');
+
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with($team->getId())
+            ->willReturn($team);
+
+        $updatedTeam = $this->teamService->updateTeam($team->getId(), $testDto);
+
+        $this->assertEquals($team->getId(), $updatedTeam->getId());
+        $this->assertEquals($testDto->getName(), $updatedTeam->getName());
+        $this->assertEquals($testDto->getCity(), $updatedTeam->getCity());
+        $this->assertEquals($testDto->getStadiumName(), $updatedTeam->getStadiumName());
+        $this->assertEquals($testDto->getYearFounded(), $updatedTeam->getYearFounded());
+    }
+
+    /**
+     * @covers \App\Service\TeamService::updateTeam
+     */
+    public function testUpdateTeamNotFound(): void
+    {
+        $testDto = new TestCreateTeamData('Team B', 'City B', 2001, 'Stadium B');
+
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with(99)
+            ->willReturn(null);
+
+        $updatedTeam = $this->teamService->updateTeam(99, $testDto);
+
+        $this->assertNull($updatedTeam, 'Expected null when updating a non-existent team.');
+    }
 }

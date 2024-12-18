@@ -65,4 +65,32 @@ class TeamServiceTest extends TestCase
         $this->assertEquals(2000, $createdTeam->getYearFounded());
         $this->assertEquals('Stadium A', $createdTeam->getStadiumName());
     }
+
+    /**
+     * @covers \App\Service\TeamService::getAllTeams
+     */
+    public function testGetAllTeams(): void
+    {
+        $team1 = new Team();
+        $team1->setName('Team A')
+            ->setCity('City A')
+            ->setYearFounded(2000)
+            ->setStadiumName('Stadium A');
+
+        $team2 = new Team();
+        $team2->setName('Team B')
+            ->setCity('City B')
+            ->setYearFounded(2005)
+            ->setStadiumName('Stadium B');
+
+        $this->teamRepository->expects($this->once())
+            ->method('findAllTeams')
+            ->willReturn([$team1, $team2]);
+
+        $teams = $this->teamService->getAllTeams();
+
+        $this->assertCount(2, $teams);
+        $this->assertEquals('Team A', $teams[0]->getName());
+        $this->assertEquals('Team B', $teams[1]->getName());
+    }
 }

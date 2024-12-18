@@ -24,18 +24,18 @@ class PlayerService
 
     public function createPlayer(CreatePlayerRequest $request): ?Player
     {
-        $team = $this->teamRepository->findTeamById($request->teamId);
+        $team = $this->teamRepository->findTeamById($request->getTeamId());
 
         if (!$team) {
-            $this->logger->error("[Player] Failed to create player - Team with ID {$request->teamId} not found.");
+            $this->logger->error("[Player] Failed to create player - Team with ID {$request->getTeamId()} not found.");
             return null;
         }
 
         $player = new Player();
-        $player->setFirstName($request->firstName)
-            ->setLastName($request->lastName)
-            ->setAge($request->age)
-            ->setPosition($request->position);
+        $player->setFirstName($request->getFirstName())
+            ->setLastName($request->getLastName())
+            ->setAge($request->getAge())
+            ->setPosition($request->getPosition());
 
         try {
             $team->addPlayer($player);

@@ -2,9 +2,10 @@
 
 namespace App\Request;
 
+use App\DTO\TeamDataInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class UpdateTeamRequest extends AbstractJsonRequest
+class UpdateTeamRequest extends AbstractJsonRequest implements TeamDataInterface
 {
     #[Assert\Length(
         min: 3,
@@ -58,4 +59,24 @@ class UpdateTeamRequest extends AbstractJsonRequest
         message: 'The stadium name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
     public readonly ?string $stadiumName;
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getCity(): string
+    {
+        return $this->city;
+    }
+
+    public function getYearFounded(): int
+    {
+        return (int) $this->yearFounded;
+    }
+
+    public function getStadiumName(): string
+    {
+        return $this->stadiumName;
+    }
 }

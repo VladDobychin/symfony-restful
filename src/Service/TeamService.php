@@ -2,7 +2,7 @@
 
 namespace App\Service;
 
-use App\DTO\CreateTeamDataInterface;
+use App\DTO\TeamDataInterface;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
@@ -21,7 +21,7 @@ class TeamService
     ) {
     }
 
-    public function createTeam(CreateTeamDataInterface $request): Team
+    public function createTeam(TeamDataInterface $request): Team
     {
         $team = new Team();
         $team->setName($request->getName())
@@ -54,7 +54,7 @@ class TeamService
         return $this->teamRepository->findTeamById($id);
     }
 
-    public function updateTeam(int $id, UpdateTeamRequest $request): ?Team
+    public function updateTeam(int $id, TeamDataInterface $request): ?Team
     {
         $team = $this->teamRepository->findTeamById($id);
 
@@ -101,22 +101,19 @@ class TeamService
         return true;
     }
 
-    private function applyTeamUpdates(Team $team, UpdateTeamRequest $request): void
+    private function applyTeamUpdates(Team $team, TeamDataInterface $request): void
     {
-        if (isset($request->name)) {
-            $team->setName($request->name);
+        if ($request->getName() !== null) {
+            $team->setName($request->getName());
         }
-
-        if (isset($request->city)) {
-            $team->setCity($request->city);
+        if ($request->getCity() !== null) {
+            $team->setCity($request->getCity());
         }
-
-        if (isset($request->yearFounded)) {
-            $team->setYearFounded((int)$request->yearFounded);
+        if ($request->getYearFounded() !== null) {
+            $team->setYearFounded($request->getYearFounded());
         }
-
-        if (isset($request->stadiumName)) {
-            $team->setStadiumName($request->stadiumName);
+        if ($request->getStadiumName() !== null) {
+            $team->setStadiumName($request->getStadiumName());
         }
     }
 }

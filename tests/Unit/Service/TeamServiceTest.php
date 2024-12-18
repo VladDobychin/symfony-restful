@@ -3,6 +3,7 @@
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Team;
+use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
 use App\Service\TeamService;
 use App\Tests\Unit\DTO\TestCreateTeamData;
@@ -48,10 +49,10 @@ class TeamServiceTest extends TestCase
         $createdTeam = $this->teamService->createTeam($testDto);
 
         $this->assertInstanceOf(Team::class, $createdTeam);
-        $this->assertEquals('Team A', $createdTeam->getName());
-        $this->assertEquals('City A', $createdTeam->getCity());
-        $this->assertEquals(2000, $createdTeam->getYearFounded());
-        $this->assertEquals('Stadium A', $createdTeam->getStadiumName());
+        $this->assertEquals($testDto->getName(), $createdTeam->getName());
+        $this->assertEquals($testDto->getCity(), $createdTeam->getCity());
+        $this->assertEquals($testDto->getYearFounded(), $createdTeam->getYearFounded());
+        $this->assertEquals($testDto->getStadiumName(), $createdTeam->getStadiumName());
     }
 
     /**
@@ -117,6 +118,36 @@ class TeamServiceTest extends TestCase
         $this->entityManager->expects($this->once())
             ->method('flush');
         $this->expectLog('[Team] was updated successfully');
+
+        $this->eventDispatcher->expects($this->once())
+            ->method('dispatch')
+            ->with($this->isInstanceOf(TeamRelocatedEvent::class));
+
+        $updatedTeam = $this->teamService->updateTeam($team->getId(), $testDto);
+
+        $this->assertEquals($team->getId(), $updatedTeam->getId());
+        $this->assertEquals($testDto->getName(), $updatedTeam->getName());
+        $this->assertEquals($testDto->getCity(), $updatedTeam->getCity());
+        $this->assertEquals($testDto->getStadiumName(), $updatedTeam->getStadiumName());
+        $this->assertEquals($testDto->getYearFounded(), $updatedTeam->getYearFounded());
+    }
+
+    /**
+     * @covers \App\Service\TeamService::updateTeam
+     */
+    public function testUpdateTeamWithoutCityChange(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $testDto = new TestCreateTeamData('Team B', 'City A', 2001, 'Stadium B');
+
+        $this->expectFindTeamById($team->getId(), $team);
+
+        $this->entityManager->expects($this->once())
+            ->method('flush');
+        $this->expectLog('[Team] was updated successfully');
+
+        $this->eventDispatcher->expects($this->never())
+            ->method('dispatch');
 
         $updatedTeam = $this->teamService->updateTeam($team->getId(), $testDto);
 

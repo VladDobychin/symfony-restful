@@ -9,6 +9,7 @@ use App\Tests\Unit\DTO\TestCreateTeamData;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class TeamServiceTest extends TestCase
@@ -83,6 +84,11 @@ class TeamServiceTest extends TestCase
             ->setYearFounded(2005)
             ->setStadiumName('Stadium B');
 
+        $reflection = new ReflectionClass(Team::class);
+        $idProperty = $reflection->getProperty('id');
+        $idProperty->setValue($team1, 1);
+        $idProperty->setValue($team2, 2);
+
         $this->teamRepository->expects($this->once())
             ->method('findAllTeams')
             ->willReturn([$team1, $team2]);
@@ -90,7 +96,10 @@ class TeamServiceTest extends TestCase
         $teams = $this->teamService->getAllTeams();
 
         $this->assertCount(2, $teams);
+        $this->assertEquals(1, $teams[0]->getId());
         $this->assertEquals('Team A', $teams[0]->getName());
+        $this->assertEquals(2, $teams[1]->getId());
         $this->assertEquals('Team B', $teams[1]->getName());
     }
+
 }

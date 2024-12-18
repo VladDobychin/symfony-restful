@@ -211,6 +211,44 @@ class PlayerServiceTest extends TestCase
         $this->assertNull($updatedPlayer);
     }
 
+    /**
+     * @covers \App\Service\PlayerService::deletePlayer
+     */
+    public function testDeletePlayer(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $player = $this->createPlayer(1, 'John', 'Doe', 25, 'Forward', $team);
+
+        $this->expectFindPlayerById($player->getId(), $player);
+
+        $this->playerRepository->expects($this->once())
+            ->method('deletePlayer')
+            ->with($player);
+
+        $result = $this->playerService->deletePlayer($player->getId());
+
+        $this->assertTrue($result);
+    }
+
+    /**
+     * @covers \App\Service\PlayerService::deletePlayer
+     */
+    public function testDeletePlayerNotFound(): void
+    {
+        $playerId = 99;
+
+        $this->expectFindPlayerById($playerId, null);
+
+        $this->playerRepository->expects($this->never())
+            ->method('deletePlayer');
+
+        $this->expectLog("Attempted to delete non-existent player with ID: {$playerId}", 'warning');
+
+        $result = $this->playerService->deletePlayer($playerId);
+
+        $this->assertFalse($result);
+    }
+
     private function createPlayer(
         int $id,
         string $firstName,

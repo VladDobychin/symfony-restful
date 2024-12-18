@@ -2,9 +2,10 @@
 
 namespace App\Request;
 
+use App\DTO\PlayerDataInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class CreatePlayerRequest extends AbstractJsonRequest
+class CreatePlayerRequest extends AbstractJsonRequest implements PlayerDataInterface
 {
     #[Assert\NotBlank]
     #[Assert\Length(
@@ -17,7 +18,7 @@ class CreatePlayerRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The first name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly string $firstName;
+    private readonly string $firstName;
 
     #[Assert\NotBlank]
     #[Assert\Length(
@@ -30,7 +31,7 @@ class CreatePlayerRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The last name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly string $lastName;
+    private readonly string $lastName;
 
     #[Assert\NotBlank]
     #[Assert\Range(
@@ -38,7 +39,7 @@ class CreatePlayerRequest extends AbstractJsonRequest
         min: 16,
         max: 50
     )]
-    public readonly int $age;
+    private readonly int $age;
 
     // TODO: Implement position value object to have real positions like 'goalkeeper', 'striker' etc
     #[Assert\NotBlank]
@@ -48,10 +49,35 @@ class CreatePlayerRequest extends AbstractJsonRequest
         minMessage: 'Position must be at least {{ limit }} characters long.',
         maxMessage: 'Position cannot exceed {{ limit }} characters.'
     )]
-    public readonly string $position;
+    private readonly string $position;
 
     #[Assert\NotBlank]
     #[Assert\Type('integer')]
     #[Assert\Positive(message: 'Team ID must be a positive number.')]
-    public readonly int $teamId;
+    private readonly int $teamId;
+
+    public function getFirstName(): string
+    {
+        return $this->firstName;
+    }
+
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function getAge(): int
+    {
+        return $this->age;
+    }
+
+    public function getPosition(): string
+    {
+        return $this->position;
+    }
+
+    public function getTeamId(): int
+    {
+        return $this->teamId;
+    }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Request;
 
+use App\DTO\TeamDataInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class CreateTeamRequest extends AbstractJsonRequest
+class CreateTeamRequest extends AbstractJsonRequest implements TeamDataInterface
 {
     #[Assert\NotBlank]
     #[Assert\Length(
@@ -18,7 +19,7 @@ class CreateTeamRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly string $name;
+    private readonly string $name;
 
     #[Assert\NotBlank]
     #[Assert\Length(
@@ -31,7 +32,7 @@ class CreateTeamRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The city must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly string $city;
+    private readonly string $city;
 
     // TODO: replace min and max with const, ensure that yearFounded cannot be in the future, find the way to dynamically calculate the max year to be current year
     #[Assert\NotBlank]
@@ -49,7 +50,7 @@ class CreateTeamRequest extends AbstractJsonRequest
         min: 1850,
         max: 2024
     )]
-    public readonly string $yearFounded;
+    private readonly string $yearFounded;
 
     #[Assert\NotBlank]
     #[Assert\Length(
@@ -62,5 +63,25 @@ class CreateTeamRequest extends AbstractJsonRequest
         pattern: "/^[a-zA-Z\s'-]+$/",
         message: 'The stadium name must only contain letters, spaces, apostrophes, and hyphens.'
     )]
-    public readonly string $stadiumName;
+    private readonly string $stadiumName;
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getCity(): string
+    {
+        return $this->city;
+    }
+
+    public function getYearFounded(): int
+    {
+        return (int) $this->yearFounded;
+    }
+
+    public function getStadiumName(): string
+    {
+        return $this->stadiumName;
+    }
 }

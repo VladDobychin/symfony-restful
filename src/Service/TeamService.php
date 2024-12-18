@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\TeamDataInterface;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
@@ -20,13 +21,13 @@ class TeamService
     ) {
     }
 
-    public function createTeam(CreateTeamRequest $request): Team
+    public function createTeam(TeamDataInterface $request): Team
     {
         $team = new Team();
-        $team->setName($request->name)
-            ->setCity($request->city)
-            ->setYearFounded((int)$request->yearFounded)
-            ->setStadiumName($request->stadiumName);
+        $team->setName($request->getName())
+            ->setCity($request->getCity())
+            ->setYearFounded($request->getYearFounded())
+            ->setStadiumName($request->getStadiumName());
 
         $this->entityManager->persist($team);
         $this->entityManager->flush();
@@ -53,7 +54,8 @@ class TeamService
         return $this->teamRepository->findTeamById($id);
     }
 
-    public function updateTeam(int $id, UpdateTeamRequest $request): ?Team
+    // TODO: handle case when no fields are supplied
+    public function updateTeam(int $id, TeamDataInterface $request): ?Team
     {
         $team = $this->teamRepository->findTeamById($id);
 
@@ -100,22 +102,19 @@ class TeamService
         return true;
     }
 
-    private function applyTeamUpdates(Team $team, UpdateTeamRequest $request): void
+    private function applyTeamUpdates(Team $team, TeamDataInterface $request): void
     {
-        if (isset($request->name)) {
-            $team->setName($request->name);
+        if ($request->getName() !== null) {
+            $team->setName($request->getName());
         }
-
-        if (isset($request->city)) {
-            $team->setCity($request->city);
+        if ($request->getCity() !== null) {
+            $team->setCity($request->getCity());
         }
-
-        if (isset($request->yearFounded)) {
-            $team->setYearFounded((int)$request->yearFounded);
+        if ($request->getYearFounded() !== null) {
+            $team->setYearFounded($request->getYearFounded());
         }
-
-        if (isset($request->stadiumName)) {
-            $team->setStadiumName($request->stadiumName);
+        if ($request->getStadiumName() !== null) {
+            $team->setStadiumName($request->getStadiumName());
         }
     }
 }

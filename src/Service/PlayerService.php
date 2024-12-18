@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\PlayerDataInterface;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
@@ -22,20 +23,20 @@ class PlayerService
     ) {
     }
 
-    public function createPlayer(CreatePlayerRequest $request): ?Player
+    public function createPlayer(PlayerDataInterface $request): ?Player
     {
-        $team = $this->teamRepository->findTeamById($request->teamId);
+        $team = $this->teamRepository->findTeamById($request->getTeamId());
 
         if (!$team) {
-            $this->logger->error("[Player] Failed to create player - Team with ID {$request->teamId} not found.");
+            $this->logger->error("[Player] Failed to create player - Team with ID {$request->getTeamId()} not found.");
             return null;
         }
 
         $player = new Player();
-        $player->setFirstName($request->firstName)
-            ->setLastName($request->lastName)
-            ->setAge($request->age)
-            ->setPosition($request->position);
+        $player->setFirstName($request->getFirstName())
+            ->setLastName($request->getLastName())
+            ->setAge($request->getAge())
+            ->setPosition($request->getPosition());
 
         try {
             $team->addPlayer($player);
@@ -56,7 +57,7 @@ class PlayerService
         }
     }
 
-    public function updatePlayer(int $id, UpdatePlayerRequest $request): ?Player
+    public function updatePlayer(int $id, PlayerDataInterface $request): ?Player
     {
         $player = $this->playerRepository->findPlayerById($id);
 
@@ -64,17 +65,17 @@ class PlayerService
             return null;
         }
 
-        if (isset($request->firstName)) {
-            $player->setFirstName($request->firstName);
+        if ($request->getFirstName() !== null) {
+            $player->setFirstName($request->getFirstName());
         }
-        if (isset($request->lastName)) {
-            $player->setLastName($request->lastName);
+        if ($request->getLastName() !== null) {
+            $player->setLastName($request->getLastName());
         }
-        if (isset($request->age)) {
-            $player->setAge($request->age);
+        if ($request->getAge() !== null) {
+            $player->setAge($request->getAge());
         }
-        if (isset($request->position)) {
-            $player->setPosition($request->position);
+        if ($request->getPosition()) {
+            $player->setPosition($request->getPosition());
         }
 
         $this->logger->info('[Player] was updated successfully', [

@@ -43,7 +43,7 @@ class TeamServiceTest extends TestCase
     {
         $testDto = new TestCreateTeamData('Team A', 'City A', 2000, 'Stadium A');
 
-        $this->expectEntityManager();
+        $this->expectEntityManager('persist', 'flush', Team::class);
         $this->expectLog('[Team] created successfully');
 
         $createdTeam = $this->teamService->createTeam($testDto);
@@ -205,13 +205,13 @@ class TeamServiceTest extends TestCase
         $this->assertFalse($isDeleted);
     }
 
-    private function expectEntityManager(): void
+    private function expectEntityManager($method1, $method2, $class): void
     {
         $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(Team::class));
+            ->method($method1)
+            ->with($this->isInstanceOf($class));
         $this->entityManager->expects($this->once())
-            ->method('flush');
+            ->method($method2);
     }
 
     private function expectLog(string $message, string $level = 'info'): void

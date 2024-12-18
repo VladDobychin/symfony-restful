@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\DTO\PlayerDataInterface;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
@@ -22,7 +23,7 @@ class PlayerService
     ) {
     }
 
-    public function createPlayer(CreatePlayerRequest $request): ?Player
+    public function createPlayer(PlayerDataInterface $request): ?Player
     {
         $team = $this->teamRepository->findTeamById($request->getTeamId());
 

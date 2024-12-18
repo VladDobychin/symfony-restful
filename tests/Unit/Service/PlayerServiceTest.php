@@ -4,14 +4,15 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Player;
 use App\Entity\Team;
+use App\Exception\PlayerLimitExceededException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Service\PlayerService;
+use App\Tests\Unit\DTO\TestCreatePlayerData;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
-use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class PlayerServiceTest extends TestCase
 {
@@ -20,7 +21,6 @@ class PlayerServiceTest extends TestCase
     private $playerRepository;
     private $teamRepository;
     private $logger;
-    private $eventDispatcher;
 
     protected function setUp(): void
     {
@@ -28,7 +28,6 @@ class PlayerServiceTest extends TestCase
         $this->playerRepository = $this->createMock(PlayerRepository::class);
         $this->teamRepository = $this->createMock(TeamRepository::class);
         $this->logger = $this->createMock(LoggerInterface::class);
-        $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
         $this->playerService = new PlayerService(
             $this->entityManager,
@@ -78,6 +77,64 @@ class PlayerServiceTest extends TestCase
         $this->assertCount(0, $players);
     }
 
+    /**
+     * @covers \App\Service\PlayerService::createPlayer
+     */
+    public function testCreatePlayer(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $playerData = new TestCreatePlayerData('John', 'Doe', 25, 'Forward', 1);
+
+        $this->expectFindTeamById($playerData->getTeamId(), $team);
+        $this->expectEntityManager('persist', 'flush', Player::class);
+        $this->expectLog('[Player] created successfully');
+
+        $player = $this->playerService->createPlayer($playerData);
+
+        $this->assertInstanceOf(Player::class, $player);
+        $this->assertEquals('John', $player->getFirstName());
+        $this->assertEquals('Doe', $player->getLastName());
+        $this->assertEquals(25, $player->getAge());
+        $this->assertEquals('Forward', $player->getPosition());
+        $this->assertSame($team, $player->getTeam());
+    }
+
+
+    /**
+     * @covers \App\Service\PlayerService::createPlayer
+     */
+    public function testCreatePlayerTeamNotFound(): void
+    {
+        $playerData = new TestCreatePlayerData('John', 'Doe', 25, 'Forward', 99);
+
+        $this->expectFindTeamById($playerData->getTeamId(), null);
+        $this->expectLog("Failed to create player - Team with ID {$playerData->getTeamId()} not found.", 'error');
+
+        $player = $this->playerService->createPlayer($playerData);
+
+        $this->assertNull($player);
+    }
+
+    /**
+     * @covers \App\Service\PlayerService::createPlayer
+     */
+    public function testCreatePlayerExceedsLimit(): void
+    {
+        $team = $this->createTeam(1, 'Team A', 'City A', 2000, 'Stadium A');
+        $playerData = new TestCreatePlayerData('John', 'Doe', 25, 'Forward', 1);
+
+        $this->expectFindTeamById($playerData->getTeamId(), $team);
+
+        $team->addPlayer($this->createPlayer(1, 'Jane', 'Smith', 30, 'Goalkeeper', $team));
+        for ($i = 2; $i <= 11; $i++) {
+            $team->addPlayer($this->createPlayer($i, "Player $i", 'Test', 22, 'Defender', $team));
+        }
+
+        $this->expectException(PlayerLimitExceededException::class);
+
+        $this->playerService->createPlayer($playerData);
+    }
+
     private function createPlayer(
         int $id,
         string $firstName,
@@ -125,13 +182,21 @@ class PlayerServiceTest extends TestCase
     }
 
     // Duplicate
-    private function expectEntityManager(): void
+    private function expectEntityManager($method1, $method2, $class): void
     {
         $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->isInstanceOf(Team::class));
+            ->method($method1)
+            ->with($this->isInstanceOf($class));
         $this->entityManager->expects($this->once())
-            ->method('flush');
+            ->method($method2);
     }
 
+    // Duplicate
+    private function expectFindTeamById(int $id, mixed $return): void
+    {
+        $this->teamRepository->expects($this->once())
+            ->method('findTeamById')
+            ->with($id)
+            ->willReturn($return);
+    }
 }

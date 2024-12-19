@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Exception\PlayerLimitExceededException;
+use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use App\Service\PlayerService;
@@ -35,20 +36,13 @@ class PlayerController extends AbstractController
     #[Route('/api/players/{id}', name: 'get_player_by_id', methods: ['GET'])]
     public function getPlayerById(int $id): JsonResponse
     {
-        $player = $this->playerService->getPlayerById($id);
+        try {
+            $player = $this->playerService->getPlayerById($id);
 
-        if (!$player) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json($player->toArray());
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ]);
     }
 
     #[Route('/api/players/{id}', name: 'update_player', methods: ['PUT'])]

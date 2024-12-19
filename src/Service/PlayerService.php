@@ -6,10 +6,10 @@ use App\DTO\PlayerDataInterface;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
+use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
-use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Psr\Log\LoggerInterface;
@@ -24,7 +24,7 @@ class PlayerService
     ) {
     }
 
-    public function createPlayer(PlayerDataInterface $request): ?Player
+    public function createPlayer(PlayerDataInterface $request): Player
     {
         $team = $this->teamRepository->findTeamById($request->getTeamId());
 
@@ -95,9 +95,15 @@ class PlayerService
         return $this->playerRepository->findPlayersByTeam($team);
     }
 
-    public function getPlayerById(int $id): ?Player
+    public function getPlayerById(int $id): Player
     {
-        return $this->playerRepository->findPlayerById($id);
+        $player = $this->playerRepository->findPlayerById($id);
+
+        if (!$player) {
+            throw new PlayerNotFoundException("Player with id $id not found");
+        }
+
+        return $player;
     }
 
     public function deletePlayer(int $id): bool

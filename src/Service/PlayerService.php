@@ -29,7 +29,6 @@ class PlayerService
         $team = $this->teamRepository->findTeamById($request->getTeamId());
 
         if (!$team) {
-            $this->logger->error("[Player] Failed to create player - Team with ID {$request->getTeamId()} not found.");
             throw new TeamNotFoundException("Team with ID {$request->getTeamId()} not found.");
         }
 
@@ -53,7 +52,6 @@ class PlayerService
 
             return $player;
         } catch (LogicException $e) {
-            $this->logger->warning("[Player] Failed to add player - {$e->getMessage()}");
             throw new PlayerLimitExceededException();
         }
     }

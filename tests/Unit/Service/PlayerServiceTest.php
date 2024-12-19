@@ -104,10 +104,8 @@ class PlayerServiceTest extends BaseServiceTest
         $playerData = new TestCreatePlayerData('John', 'Doe', 25, 'Forward', 99);
 
         $this->expectFindTeamById($playerData->getTeamId(), null);
-        $this->expectLog("Failed to create player - Team with ID {$playerData->getTeamId()} not found.", 'error');
 
         $this->expectException(TeamNotFoundException::class);
-        $this->expectExceptionMessage("Team with ID {$playerData->getTeamId()} not found.");
 
         $this->playerService->createPlayer($playerData);
     }

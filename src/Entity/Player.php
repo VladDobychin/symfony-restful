@@ -93,4 +93,16 @@ class Player
 
         return $this;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'firstName' => $this->getFirstName(),
+            'lastName' => $this->getLastName(),
+            'age' => $this->getAge(),
+            'position' => $this->getPosition(),
+            'teamId' => $this->getTeam()->getId()
+        ];
+    }
 }

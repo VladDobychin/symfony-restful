@@ -24,18 +24,11 @@ class PlayerController extends AbstractController
         try {
             $player = $this->playerService->createPlayer($request);
 
-            return $this->json([
-                'id' => $player->getId(),
-                'firstName' => $player->getFirstName(),
-                'lastName' => $player->getLastName(),
-                'age' => $player->getAge(),
-                'position' => $player->getPosition(),
-                'teamId' => $player->getTeam()->getId(),
-            ], Response::HTTP_CREATED);
+            return $this->json($player->toArray(), Response::HTTP_CREATED);
         } catch (TeamNotFoundException $exception) {
-            return $this->json(['error' => $exception->getMessage(), Response::HTTP_BAD_REQUEST]);
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (PlayerLimitExceededException $exception) {
-            return $this->json(['error' => $exception->getMessage(), Response::HTTP_CONFLICT]);
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_CONFLICT);
         }
     }
 

@@ -222,9 +222,7 @@ class PlayerServiceTest extends BaseServiceTest
             ->method('deletePlayer')
             ->with($player);
 
-        $result = $this->playerService->deletePlayer($player->getId());
-
-        $this->assertTrue($result);
+        $this->playerService->deletePlayer($player->getId());
     }
 
     /**
@@ -239,11 +237,9 @@ class PlayerServiceTest extends BaseServiceTest
         $this->playerRepository->expects($this->never())
             ->method('deletePlayer');
 
-        $this->expectLog("Attempted to delete non-existent player with ID: {$playerId}", 'warning');
+        $this->expectException(PlayerNotFoundException::class);
 
-        $result = $this->playerService->deletePlayer($playerId);
-
-        $this->assertFalse($result);
+        $this->playerService->deletePlayer($playerId);
     }
 
     private function createPlayer(

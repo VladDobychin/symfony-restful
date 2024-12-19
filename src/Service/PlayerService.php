@@ -60,11 +60,7 @@ class PlayerService
 
     public function updatePlayer(int $id, PlayerDataInterface $request): ?Player
     {
-        $player = $this->playerRepository->findPlayerById($id);
-
-        if (!$player) {
-            throw new PlayerNotFoundException("Player with id $id not found");
-        }
+        $player = $this->getPlayerById($id);
 
         if ($request->getFirstName() !== null) {
             $player->setFirstName($request->getFirstName());
@@ -95,6 +91,17 @@ class PlayerService
         return $this->playerRepository->findPlayersByTeam($team);
     }
 
+    public function deletePlayer(int $id): void
+    {
+        $player = $this->getPlayerById($id);
+
+        $this->logger->info("[Player] Deleting player '{$player->getFirstName()} {$player->getLastName()}' with ID: {$id}");
+
+        $this->playerRepository->deletePlayer($player);
+
+        $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
+    }
+
     public function getPlayerById(int $id): Player
     {
         $player = $this->playerRepository->findPlayerById($id);
@@ -104,22 +111,6 @@ class PlayerService
         }
 
         return $player;
-    }
-
-    public function deletePlayer(int $id): void
-    {
-        $player = $this->playerRepository->findPlayerById($id);
-
-        if (!$player) {
-            $this->logger->warning("[Player] Attempted to delete non-existent player with ID: {$id}");
-            throw new PlayerNotFoundException("Player with id $id not found");
-        }
-
-        $this->logger->info("[Player] Deleting player '{$player->getFirstName()} {$player->getLastName()}' with ID: {$id}");
-
-        $this->playerRepository->deletePlayer($player);
-
-        $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
     }
 
 }

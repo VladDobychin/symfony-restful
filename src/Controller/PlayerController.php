@@ -62,13 +62,13 @@ class PlayerController extends AbstractController
     #[Route('/api/players/{id}', name: 'delete_player', methods: ['DELETE'])]
     public function deletePlayer(int $id): JsonResponse
     {
-        $isDeleted = $this->playerService->deletePlayer($id);
+        try {
+            $this->playerService->deletePlayer($id);
 
-        if (!$isDeleted) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json(null, Response::HTTP_NO_CONTENT);
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
 }

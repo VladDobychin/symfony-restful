@@ -106,13 +106,13 @@ class PlayerService
         return $player;
     }
 
-    public function deletePlayer(int $id): bool
+    public function deletePlayer(int $id): void
     {
         $player = $this->playerRepository->findPlayerById($id);
 
         if (!$player) {
             $this->logger->warning("[Player] Attempted to delete non-existent player with ID: {$id}");
-            return false;
+            throw new PlayerNotFoundException("Player with id $id not found");
         }
 
         $this->logger->info("[Player] Deleting player '{$player->getFirstName()} {$player->getLastName()}' with ID: {$id}");
@@ -120,8 +120,6 @@ class PlayerService
         $this->playerRepository->deletePlayer($player);
 
         $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
-
-        return true;
     }
 
 }

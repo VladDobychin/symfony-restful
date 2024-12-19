@@ -203,10 +203,9 @@ class PlayerServiceTest extends BaseServiceTest
 
         $this->logger->expects($this->never())->method('info');
         $this->entityManager->expects($this->never())->method('flush');
+        $this->expectException(PlayerNotFoundException::class);
 
         $updatedPlayer = $this->playerService->updatePlayer($playerId, $updatedData);
-
-        $this->assertNull($updatedPlayer);
     }
 
     /**

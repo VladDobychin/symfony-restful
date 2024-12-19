@@ -4,6 +4,7 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Player;
 use App\Entity\Team;
+use App\Exception\PlayerLimitExceededException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
@@ -104,9 +105,10 @@ class PlayerServiceTest extends BaseServiceTest
         $this->expectFindTeamById($playerData->getTeamId(), null);
         $this->expectLog("Failed to create player - Team with ID {$playerData->getTeamId()} not found.", 'error');
 
-        $player = $this->playerService->createPlayer($playerData);
+        $this->expectException(TeamNotFoundException::class);
+        $this->expectExceptionMessage("Team with ID {$playerData->getTeamId()} not found.");
 
-        $this->assertNull($player);
+        $this->playerService->createPlayer($playerData);
     }
 
     /**
@@ -124,7 +126,8 @@ class PlayerServiceTest extends BaseServiceTest
             $team->addPlayer($this->createPlayer($i, "Player $i", 'Test', 22, 'Defender', $team));
         }
 
-        $this->expectException(TeamNotFoundException::class);
+        $this->expectException(PlayerLimitExceededException::class);
+        $this->expectExceptionMessage("A team cannot have more than 11 players.");
 
         $this->playerService->createPlayer($playerData);
     }

@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
+use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
@@ -159,9 +160,9 @@ class PlayerServiceTest extends BaseServiceTest
         $playerId = 99;
 
         $this->expectFindPlayerById($playerId, null);
-        $result = $this->playerService->getPlayerById($playerId);
+        $this->expectException(PlayerNotFoundException::class);
 
-        $this->assertNull($result);
+        $this->playerService->getPlayerById($playerId);
     }
 
     /**

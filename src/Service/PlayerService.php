@@ -63,7 +63,7 @@ class PlayerService
         $player = $this->playerRepository->findPlayerById($id);
 
         if (!$player) {
-            return null;
+            throw new PlayerNotFoundException("Player with id $id not found");
         }
 
         if ($request->getFirstName() !== null) {
@@ -75,7 +75,7 @@ class PlayerService
         if ($request->getAge() !== null) {
             $player->setAge($request->getAge());
         }
-        if ($request->getPosition()) {
+        if ($request->getPosition() !== null) {
             $player->setPosition($request->getPosition());
         }
 

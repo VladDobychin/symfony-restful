@@ -50,20 +50,13 @@ class PlayerController extends AbstractController
         int $id,
         UpdatePlayerRequest $request,
     ): JsonResponse {
-        $player = $this->playerService->updatePlayer($id, $request);
+        try {
+            $player = $this->playerService->updatePlayer($id, $request);
 
-        if (!$player) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json($player->toArray());
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ]);
     }
 
     #[Route('/api/players/{id}', name: 'delete_player', methods: ['DELETE'])]

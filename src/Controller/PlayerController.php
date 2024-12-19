@@ -2,6 +2,9 @@
 
 namespace App\Controller;
 
+use App\Exception\PlayerLimitExceededException;
+use App\Exception\PlayerNotFoundException;
+use App\Exception\TeamNotFoundException;
 use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,39 +22,27 @@ class PlayerController extends AbstractController
     public function createPlayer(
         CreatePlayerRequest $request,
     ): JsonResponse {
-        $player = $this->playerService->createPlayer($request);
+        try {
+            $player = $this->playerService->createPlayer($request);
 
-        if (!$player) {
-            return $this->json(['error' => 'Team not found'], Response::HTTP_BAD_REQUEST);
+            return $this->json($player->toArray(), Response::HTTP_CREATED);
+        } catch (TeamNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (PlayerLimitExceededException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_CONFLICT);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ], Response::HTTP_CREATED);
     }
 
     #[Route('/api/players/{id}', name: 'get_player_by_id', methods: ['GET'])]
     public function getPlayerById(int $id): JsonResponse
     {
-        $player = $this->playerService->getPlayerById($id);
+        try {
+            $player = $this->playerService->getPlayerById($id);
 
-        if (!$player) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json($player->toArray());
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ]);
     }
 
     #[Route('/api/players/{id}', name: 'update_player', methods: ['PUT'])]
@@ -59,32 +50,25 @@ class PlayerController extends AbstractController
         int $id,
         UpdatePlayerRequest $request,
     ): JsonResponse {
-        $player = $this->playerService->updatePlayer($id, $request);
+        try {
+            $player = $this->playerService->updatePlayer($id, $request);
 
-        if (!$player) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json($player->toArray());
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ]);
     }
 
     #[Route('/api/players/{id}', name: 'delete_player', methods: ['DELETE'])]
     public function deletePlayer(int $id): JsonResponse
     {
-        $isDeleted = $this->playerService->deletePlayer($id);
+        try {
+            $this->playerService->deletePlayer($id);
 
-        if (!$isDeleted) {
-            return $this->json(['error' => 'Player not found'], Response::HTTP_NOT_FOUND);
+            return $this->json(null, Response::HTTP_NO_CONTENT);
+        } catch (PlayerNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
 }

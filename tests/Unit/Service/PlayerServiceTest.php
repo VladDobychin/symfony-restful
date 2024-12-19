@@ -5,6 +5,8 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
+use App\Exception\PlayerNotFoundException;
+use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Service\PlayerService;
@@ -104,9 +106,10 @@ class PlayerServiceTest extends BaseServiceTest
         $this->expectFindTeamById($playerData->getTeamId(), null);
         $this->expectLog("Failed to create player - Team with ID {$playerData->getTeamId()} not found.", 'error');
 
-        $player = $this->playerService->createPlayer($playerData);
+        $this->expectException(TeamNotFoundException::class);
+        $this->expectExceptionMessage("Team with ID {$playerData->getTeamId()} not found.");
 
-        $this->assertNull($player);
+        $this->playerService->createPlayer($playerData);
     }
 
     /**
@@ -125,6 +128,7 @@ class PlayerServiceTest extends BaseServiceTest
         }
 
         $this->expectException(PlayerLimitExceededException::class);
+        $this->expectExceptionMessage("A team cannot have more than 11 players.");
 
         $this->playerService->createPlayer($playerData);
     }
@@ -156,9 +160,9 @@ class PlayerServiceTest extends BaseServiceTest
         $playerId = 99;
 
         $this->expectFindPlayerById($playerId, null);
-        $result = $this->playerService->getPlayerById($playerId);
+        $this->expectException(PlayerNotFoundException::class);
 
-        $this->assertNull($result);
+        $this->playerService->getPlayerById($playerId);
     }
 
     /**
@@ -199,10 +203,9 @@ class PlayerServiceTest extends BaseServiceTest
 
         $this->logger->expects($this->never())->method('info');
         $this->entityManager->expects($this->never())->method('flush');
+        $this->expectException(PlayerNotFoundException::class);
 
-        $updatedPlayer = $this->playerService->updatePlayer($playerId, $updatedData);
-
-        $this->assertNull($updatedPlayer);
+        $this->playerService->updatePlayer($playerId, $updatedData);
     }
 
     /**
@@ -219,9 +222,7 @@ class PlayerServiceTest extends BaseServiceTest
             ->method('deletePlayer')
             ->with($player);
 
-        $result = $this->playerService->deletePlayer($player->getId());
-
-        $this->assertTrue($result);
+        $this->playerService->deletePlayer($player->getId());
     }
 
     /**
@@ -236,11 +237,9 @@ class PlayerServiceTest extends BaseServiceTest
         $this->playerRepository->expects($this->never())
             ->method('deletePlayer');
 
-        $this->expectLog("Attempted to delete non-existent player with ID: {$playerId}", 'warning');
+        $this->expectException(PlayerNotFoundException::class);
 
-        $result = $this->playerService->deletePlayer($playerId);
-
-        $this->assertFalse($result);
+        $this->playerService->deletePlayer($playerId);
     }
 
     private function createPlayer(

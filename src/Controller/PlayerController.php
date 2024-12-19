@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Exception\PlayerLimitExceededException;
+use App\Exception\TeamNotFoundException;
 use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,20 +21,22 @@ class PlayerController extends AbstractController
     public function createPlayer(
         CreatePlayerRequest $request,
     ): JsonResponse {
-        $player = $this->playerService->createPlayer($request);
+        try {
+            $player = $this->playerService->createPlayer($request);
 
-        if (!$player) {
-            return $this->json(['error' => 'Team not found'], Response::HTTP_BAD_REQUEST);
+            return $this->json([
+                'id' => $player->getId(),
+                'firstName' => $player->getFirstName(),
+                'lastName' => $player->getLastName(),
+                'age' => $player->getAge(),
+                'position' => $player->getPosition(),
+                'teamId' => $player->getTeam()->getId(),
+            ], Response::HTTP_CREATED);
+        } catch (TeamNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage(), Response::HTTP_BAD_REQUEST]);
+        } catch (PlayerLimitExceededException $exception) {
+            return $this->json(['error' => $exception->getMessage(), Response::HTTP_CONFLICT]);
         }
-
-        return $this->json([
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-            'teamId' => $player->getTeam()->getId(),
-        ], Response::HTTP_CREATED);
     }
 
     #[Route('/api/players/{id}', name: 'get_player_by_id', methods: ['GET'])]

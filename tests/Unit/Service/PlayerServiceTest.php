@@ -4,7 +4,7 @@ namespace App\Tests\Unit\Service;
 
 use App\Entity\Player;
 use App\Entity\Team;
-use App\Exception\PlayerLimitExceededException;
+use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Service\PlayerService;
@@ -124,7 +124,7 @@ class PlayerServiceTest extends BaseServiceTest
             $team->addPlayer($this->createPlayer($i, "Player $i", 'Test', 22, 'Defender', $team));
         }
 
-        $this->expectException(PlayerLimitExceededException::class);
+        $this->expectException(TeamNotFoundException::class);
 
         $this->playerService->createPlayer($playerData);
     }

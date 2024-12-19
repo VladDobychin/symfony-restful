@@ -6,6 +6,7 @@ use App\DTO\PlayerDataInterface;
 use App\Entity\Player;
 use App\Entity\Team;
 use App\Exception\PlayerLimitExceededException;
+use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use App\Repository\TeamRepository;
 use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
@@ -29,7 +30,7 @@ class PlayerService
 
         if (!$team) {
             $this->logger->error("[Player] Failed to create player - Team with ID {$request->getTeamId()} not found.");
-            return null;
+            throw new TeamNotFoundException("Team with ID {$request->getTeamId()} not found.");
         }
 
         $player = new Player();

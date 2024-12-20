@@ -9,7 +9,6 @@ use App\Exception\{PlayerLimitExceededException, PlayerNotFoundException, TeamNo
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PlayerController extends AbstractController
 {

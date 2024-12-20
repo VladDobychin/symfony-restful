@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\DTO\TeamDTO;
 use App\Exception\TeamNotFoundException;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Service\{DTOValidationService, TeamService, PlayerService};
 use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

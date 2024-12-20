@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Event\TeamRelocatedEvent;
 use App\Repository\TeamRepository;
 use Doctrine\Common\Collections\{Collection, ArrayCollection};
 
@@ -12,6 +13,7 @@ use LogicException;
 #[ORM\Entity(repositoryClass: TeamRepository::class)]
 class Team
 {
+    private array $events = [];
     #[ORM\OneToMany(
         targetEntity:
         Player::class,
@@ -61,10 +63,24 @@ class Team
     public function relocateTeam(string $newCity): void
     {
         if (empty($newCity)) {
-            throw new InvalidArgumentException('City cannot be empty.');
+            throw new \InvalidArgumentException('City cannot be empty.');
         }
 
+        $oldCity = $this->city;
         $this->city = $newCity;
+        $this->recordEvent(new TeamRelocatedEvent($this->getId(), $oldCity));
+    }
+
+    private function recordEvent(object $event): void
+    {
+        $this->events[] = $event;
+    }
+
+    public function popEvents(): array
+    {
+        $events = $this->events;
+        $this->events = [];
+        return $events;
     }
 
     public function changeStadium(string $newStadium): void

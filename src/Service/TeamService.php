@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\DTO\TeamDTO;
 use App\Entity\Team;
-use App\Event\TeamRelocatedEvent;
 use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\TeamRepository;
@@ -75,8 +74,8 @@ class TeamService
 
         $this->logger->info('[Team] was updated successfully', $team->toArray());
 
-        if ($team->getCity() !== $oldCity) {
-            $this->eventDispatcher->dispatch(new TeamRelocatedEvent($team->getId(), $oldCity));
+        foreach ($team->popEvents() as $event) {
+            $this->eventDispatcher->dispatch($event);
         }
 
         return $team;

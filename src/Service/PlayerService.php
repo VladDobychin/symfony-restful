@@ -7,7 +7,6 @@ use App\Entity\Player;
 use App\Exception\PlayerLimitExceededException;
 use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
-use App\Repository\PlayerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Psr\Log\LoggerInterface;
@@ -17,7 +16,6 @@ class PlayerService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TeamService $teamService,
-        private PlayerRepository $playerRepository,
         private LoggerInterface $logger
     ) {
     }
@@ -30,56 +28,55 @@ class PlayerService
     {
         $team = $this->teamService->getTeamById($playerData->getTeamId());
 
-        $player = new Player();
-        $player->setFirstName($playerData->getFirstName())
-            ->setLastName($playerData->getLastName())
-            ->setAge($playerData->getAge())
-            ->setPosition($playerData->getPosition());
-
         try {
-            $team->addPlayer($player);
-
-            $this->entityManager->persist($player);
-            $this->entityManager->flush();
-
-            $this->logger->info('[Player] created successfully', [
-                'id' => $player->getId(),
-                'name' => "{$player->getFirstName()} {$player->getLastName()}",
-                'teamId' => $team->getId(),
-            ]);
-
-            return $player;
+            $player = $team->addPlayer(
+                $playerData->getFirstName(),
+                $playerData->getLastName(),
+                $playerData->getAge(),
+                $playerData->getPosition()
+            );
         } catch (LogicException $e) {
             throw new PlayerLimitExceededException();
         }
+
+        $this->entityManager->persist($team);
+        $this->entityManager->flush();
+
+        $this->logger->info('[Player] created successfully', $player->toArray());
+
+        return $player;
     }
 
     /**
      * @throws PlayerNotFoundException
      */
-    public function updatePlayer(int $id, PlayerDTO $request): ?Player
+    public function updatePlayer(int $id, PlayerDTO $playerData): Player
     {
-        $player = $this->getPlayerById($id);
+        $team = $this->teamService->getTeamByPlayerId($id);
+        $player = $team->getPlayerById($id);
 
-        if ($request->getFirstName() !== null) {
-            $player->setFirstName($request->getFirstName());
-        }
-        if ($request->getLastName() !== null) {
-            $player->setLastName($request->getLastName());
-        }
-        if ($request->getAge() !== null) {
-            $player->setAge($request->getAge());
-        }
-        if ($request->getPosition() !== null) {
-            $player->setPosition($request->getPosition());
+        if (!$player) {
+            throw new PlayerNotFoundException("Player with id $id not found");
         }
 
-        $this->logger->info('[Player] was updated successfully', [
-            'id' => $player->getId(),
-            'name' => "{$player->getFirstName()} {$player->getLastName()}",
-        ]);
+        if ($playerData->getFirstName() !== null || $playerData->getLastName() !== null) {
+            $player->rename(
+                $playerData->getFirstName() ?? $player->getFirstName(),
+                $playerData->getLastName() ?? $player->getLastName()
+            );
+        }
+
+        if ($playerData->getAge() !== null) {
+            $player->changeAge($playerData->getAge());
+        }
+
+        if ($playerData->getPosition() !== null) {
+            $player->changePosition($playerData->getPosition());
+        }
 
         $this->entityManager->flush();
+
+        $this->logger->info('[Player] was updated successfully', $player->toArray());
 
         return $player;
     }
@@ -90,10 +87,10 @@ class PlayerService
      */
     public function getPlayersByTeam(int $id): array
     {
-        $this->teamService->getTeamById($id);
+        $team = $this->teamService->getTeamById($id);
+        $players = $team->getPlayers();
 
-        $players = $this->playerRepository->findPlayersByTeamId($id);
-        return array_map(fn($player) => $player->toArray(), $players);
+        return array_map(fn($player) => $player->toArray(), $players->toArray());
     }
 
     /**
@@ -101,11 +98,18 @@ class PlayerService
      */
     public function deletePlayer(int $id): void
     {
-        $player = $this->getPlayerById($id);
+        $team = $this->teamService->getTeamByPlayerId($id);
+        $player = $team->getPlayerById($id);
+
+        if (!$player) {
+            throw new PlayerNotFoundException("Player with id $id not found");
+        }
 
         $this->logger->info("[Player] Deleting player '{$player->getFirstName()} {$player->getLastName()}' with ID: {$id}");
 
-        $this->playerRepository->deletePlayer($player);
+        $team->removePlayer($player);
+
+        $this->entityManager->flush();
 
         $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
     }
@@ -115,7 +119,8 @@ class PlayerService
      */
     public function getPlayerById(int $id): Player
     {
-        $player = $this->playerRepository->findPlayerById($id);
+        $team = $this->teamService->getTeamByPlayerId($id);
+        $player = $team->getPlayerById($id);
 
         if (!$player) {
             throw new PlayerNotFoundException("Player with id $id not found");

@@ -2,11 +2,10 @@
 
 namespace App\Entity;
 
-use App\Repository\PlayerRepository;
 use Doctrine\ORM\Mapping as ORM;
 use InvalidArgumentException;
 
-#[ORM\Entity(repositoryClass: PlayerRepository::class)]
+#[ORM\Entity]
 class Player
 {
     #[ORM\ManyToOne(targetEntity: Team::class, inversedBy: 'players')]
@@ -30,15 +29,15 @@ class Player
     #[ORM\Column(length: 255)]
     private string $position;
 
-    public function __construct(
-        Team $team,
-        string $firstName,
-        string $lastName,
-        int $age,
-        string $position
-    ) {
-        if (empty($firstName) || empty($lastName) || empty($position) || $age < 16) {
+
+    public function __construct(Team $team, string $firstName, string $lastName, int $age, string $position)
+    {
+        if (empty($firstName) || empty($lastName) || empty($position)) {
             throw new InvalidArgumentException('Invalid player data.');
+        }
+
+        if (($age < 16) || ($age > 50)) {
+            throw new InvalidArgumentException('Player must be between 16 and 50 years old.');
         }
 
         $this->team = $team;
@@ -46,6 +45,36 @@ class Player
         $this->lastName = $lastName;
         $this->age = $age;
         $this->position = $position;
+    }
+
+    public function rename(string $firstName, string $lastName): void
+    {
+        if (empty($firstName) || empty($lastName)) {
+            throw new InvalidArgumentException('Names cannot be empty.');
+        }
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
+    }
+
+    public function changeAge(int $age): void
+    {
+        if ($age < 16) {
+            throw new InvalidArgumentException('Player must be at least 16 years old.');
+        }
+        $this->age = $age;
+    }
+
+    public function changePosition(string $position): void
+    {
+        if (empty($position)) {
+            throw new InvalidArgumentException('Position cannot be empty.');
+        }
+        $this->position = $position;
+    }
+
+    public function leaveTeam(): void
+    {
+        $this->team = null;
     }
 
     public function getId(): ?int
@@ -76,11 +105,6 @@ class Player
     public function getTeam(): Team
     {
         return $this->team;
-    }
-
-    public function leaveTeam(): void
-    {
-        $this->team = null;
     }
 
     public function toArray(): array

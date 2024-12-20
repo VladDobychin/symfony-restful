@@ -5,6 +5,7 @@ namespace App\Service;
 use App\DTO\TeamDTO;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
+use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\TeamRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -82,6 +83,19 @@ class TeamService
     }
 
     /**
+     * @throws PlayerNotFoundException
+     */
+    public function getTeamByPlayerId(int $playerId): Team
+    {
+        $team = $this->teamRepository->findTeamByPlayerId($playerId);
+        if (!$team) {
+            throw new PlayerNotFoundException("Player with id $playerId not found");
+        }
+
+        return $team;
+    }
+
+    /**
      * @throws TeamNotFoundException
      */
     public function deleteTeam(int $id): void
@@ -106,7 +120,7 @@ class TeamService
         }
 
         if ($teamData->getStadiumName() !== null ) {
-            $team->changeStadium($teamData->getCity());
+            $team->changeStadium($teamData->getStadiumName());
         }
 
         if ($teamData->getYearFounded() !== null) {

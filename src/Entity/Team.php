@@ -12,7 +12,13 @@ use LogicException;
 #[ORM\Entity(repositoryClass: TeamRepository::class)]
 class Team
 {
-    #[ORM\OneToMany(targetEntity: Player::class, mappedBy: 'team', cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(
+        targetEntity:
+        Player::class,
+        mappedBy: 'team',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
     private Collection $players;
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -36,13 +42,12 @@ class Team
         string $city,
         int $yearFounded,
         string $stadiumName
-    )
-    {
+    ) {
         if (empty($name) || empty($city) || empty($stadiumName)) {
             throw new InvalidArgumentException('Name, city and stadium cannot be empty.');
         }
 
-        if ($yearFounded < 1850 || $yearFounded > (int) date('Y')) {
+        if ($yearFounded < 1850 || $yearFounded > (int)date('Y')) {
             throw new InvalidArgumentException('Invalid year founded.');
         }
 
@@ -110,6 +115,22 @@ class Team
         }
     }
 
+    public function getPlayerById(int $playerId): ?Player
+    {
+        foreach ($this->players as $player) {
+            if ($player->getId() === $playerId) {
+                return $player;
+            }
+        }
+        return null;
+    }
+
+    public function getPlayers(): Collection
+    {
+        return $this->players;
+    }
+
+
     public function getId(): ?int
     {
         return $this->id;
@@ -134,6 +155,7 @@ class Team
     {
         return $this->stadiumName;
     }
+
     public function toArray(): array
     {
         return [

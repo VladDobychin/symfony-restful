@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\DTO\TeamDataInterface;
 use App\DTO\TeamDTO;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
@@ -24,11 +23,12 @@ class TeamService
 
     public function createTeam(TeamDTO $teamData): Team
     {
-        $team = new Team();
-        $team->setName($teamData->getName())
-            ->setCity($teamData->getCity())
-            ->setYearFounded($teamData->getYearFounded())
-            ->setStadiumName($teamData->getStadiumName());
+        $team = new Team(
+            $teamData->getName(),
+            $teamData->getCity(),
+            $teamData->getYearFounded(),
+            $teamData->getStadiumName()
+        );
 
         $this->entityManager->persist($team);
         $this->entityManager->flush();
@@ -66,7 +66,6 @@ class TeamService
     public function updateTeam(int $id, TeamDTO $teamData): Team
     {
         $team = $this->getTeamById($id);
-
         $oldCity = $team->getCity();
 
         $this->applyTeamUpdates($team, $teamData);
@@ -99,16 +98,19 @@ class TeamService
     private function applyTeamUpdates(Team $team, TeamDTO $teamData): void
     {
         if ($teamData->getName() !== null) {
-            $team->setName($teamData->getName());
+            $team->renameTeam($teamData->getName());
         }
-        if ($teamData->getCity() !== null) {
-            $team->setCity($teamData->getCity());
+
+        if ($teamData->getCity() !== null ) {
+            $team->relocateTeam($teamData->getCity());
         }
+
+        if ($teamData->getStadiumName() !== null ) {
+            $team->changeStadium($teamData->getCity());
+        }
+
         if ($teamData->getYearFounded() !== null) {
-            $team->setYearFounded($teamData->getYearFounded());
-        }
-        if ($teamData->getStadiumName() !== null) {
-            $team->setStadiumName($teamData->getStadiumName());
+            $team->changeYearFounded($teamData->getYearFounded());
         }
     }
 }

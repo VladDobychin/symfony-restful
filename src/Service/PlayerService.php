@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\PlayerDataInterface;
+use App\DTO\PlayerDTO;
 use App\Entity\Player;
 use App\Exception\PlayerLimitExceededException;
 use App\Exception\PlayerNotFoundException;
@@ -21,15 +22,15 @@ class PlayerService
     ) {
     }
 
-    public function createPlayer(PlayerDataInterface $request): Player
+    public function createPlayer(PlayerDTO $playerData): Player
     {
-        $team = $this->teamService->getTeamById($request->getTeamId());
+        $team = $this->teamService->getTeamById($playerData->getTeamId());
 
         $player = new Player();
-        $player->setFirstName($request->getFirstName())
-            ->setLastName($request->getLastName())
-            ->setAge($request->getAge())
-            ->setPosition($request->getPosition());
+        $player->setFirstName($playerData->getFirstName())
+            ->setLastName($playerData->getLastName())
+            ->setAge($playerData->getAge())
+            ->setPosition($playerData->getPosition());
 
         try {
             $team->addPlayer($player);

@@ -2,15 +2,14 @@
 
 namespace App\Controller;
 
-use App\Exception\PlayerLimitExceededException;
-use App\Exception\PlayerNotFoundException;
-use App\Exception\TeamNotFoundException;
-use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
+use App\DTO\PlayerDTO;
+use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
+use App\Exception\{PlayerLimitExceededException, PlayerNotFoundException, TeamNotFoundException};
+use App\Request\{UpdatePlayerRequest};
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PlayerController extends AbstractController
 {
@@ -20,10 +19,19 @@ class PlayerController extends AbstractController
 
     #[Route('/api/players', name: 'create_player', methods: ['POST'])]
     public function createPlayer(
-        CreatePlayerRequest $request,
+        Request $request,
+        ValidatorInterface $validator
     ): JsonResponse {
+        $data = $request->toArray();
+        $playerData = PlayerDTO::fromArray($data);
+
+        $errors = $validator->validate($playerData, null, ['create']);
+        if (count($errors) > 0) {
+            return $this->handleValidationErrors($errors);
+        }
+
         try {
-            $player = $this->playerService->createPlayer($request);
+            $player = $this->playerService->createPlayer($playerData);
 
             return $this->json($player->toArray(), Response::HTTP_CREATED);
         } catch (TeamNotFoundException $exception) {
@@ -71,4 +79,17 @@ class PlayerController extends AbstractController
         }
     }
 
+    private function handleValidationErrors($violations): JsonResponse
+    {
+        $errors = [];
+        foreach ($violations as $violation) {
+            $errors[] = [
+                'property' => $violation->getPropertyPath(),
+                'value' => $violation->getInvalidValue(),
+                'message' => $violation->getMessage(),
+            ];
+        }
+
+        return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
 }

@@ -117,4 +117,15 @@ class Team
 
         return $this;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'city' => $this->getCity(),
+            'yearFounded' => $this->getYearFounded(),
+            'stadiumName' => $this->getStadiumName()
+        ];
+    }
 }

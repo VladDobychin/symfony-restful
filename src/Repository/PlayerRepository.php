@@ -17,11 +17,11 @@ class PlayerRepository extends ServiceEntityRepository
         parent::__construct($registry, Player::class);
     }
 
-    public function findPlayersByTeam(Team $team): array
+    public function findPlayersByTeamId(int $teamId): array
     {
         return $this->createQueryBuilder('p')
-            ->andWhere('p.team = :team')
-            ->setParameter('team', $team)
+            ->andWhere('p.team = :teamId')
+            ->setParameter('teamId', $teamId)
             ->orderBy('p.id', 'ASC')
             ->getQuery()
             ->getResult();

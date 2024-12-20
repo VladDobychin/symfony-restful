@@ -26,9 +26,9 @@ class TeamController extends AbstractController
             return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $team = $this->teamService->createTeam($teamData);
+        $teamDto = $this->teamService->createTeam($teamData);
 
-        return $this->json($team->toArray(), Response::HTTP_CREATED);
+        return $this->json($teamDto->toArray(), Response::HTTP_CREATED);
     }
 
     #[Route('/api/teams', name: 'get_teams', methods: ['GET'])]
@@ -43,9 +43,9 @@ class TeamController extends AbstractController
     public function getTeamById(int $id): JsonResponse
     {
         try {
-            $team = $this->teamService->getTeamById($id);
+            $teamDto = $this->teamService->getTeamByIdDTO($id);
 
-            return $this->json($team->toArray());
+            return $this->json($teamDto->toArray());
         } catch (TeamNotFoundException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
@@ -64,9 +64,9 @@ class TeamController extends AbstractController
         }
 
         try {
-            $team = $this->teamService->updateTeam($id, $teamData);
+            $teamDto = $this->teamService->updateTeam($id, $teamData);
 
-            return $this->json($team->toArray());
+            return $this->json($teamDto->toArray());
         } catch (TeamNotFoundException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }

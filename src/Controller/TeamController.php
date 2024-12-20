@@ -76,22 +76,12 @@ class TeamController extends AbstractController
         int $id,
         PlayerService $playerService
     ): JsonResponse {
-        $team = $this->teamService->getTeamById($id);
+        try {
+            $players = $playerService->getPlayersByTeam($id);
 
-        if (!$team) {
-            return $this->json(['error' => 'Team not found'], Response::HTTP_NOT_FOUND);
+            return $this->json($players);
+        } catch (TeamNotFoundException $exception) {
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
-
-        $players = $playerService->getPlayersByTeam($team);
-
-        $playerData = array_map(fn($player) => [
-            'id' => $player->getId(),
-            'firstName' => $player->getFirstName(),
-            'lastName' => $player->getLastName(),
-            'age' => $player->getAge(),
-            'position' => $player->getPosition(),
-        ], $players);
-
-        return $this->json($playerData);
     }
 }

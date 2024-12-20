@@ -32,21 +32,17 @@ class TeamService
         $this->entityManager->persist($team);
         $this->entityManager->flush();
 
-        $this->logger->info('[Team] created successfully', [
-            'id' => $team->getId(),
-            'name' => $team->getName(),
-            'city' => $team->getCity(),
-            'yearFounded' => $team->getYearFounded(),
-            'stadiumName' => $team->getStadiumName(),
-        ]);
+        $this->logger->info('[Team] created successfully', $team->toArray());
 
         return $team;
     }
 
     public function getAllTeams(): array
     {
-        return $this->teamRepository
+        $teams = $this->teamRepository
             ->findAllTeams();
+
+        return array_map(fn($team) => $team->toArray(), $teams);
     }
 
     public function getTeamById(int $id): ?Team

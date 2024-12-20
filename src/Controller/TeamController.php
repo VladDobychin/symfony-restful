@@ -14,36 +14,21 @@ class TeamController extends AbstractController
     {
     }
 
-    // TODO: research how to take care of trailing slashes
     #[Route('/api/teams', name: 'create_team', methods: ['POST'])]
     public function createTeam(
         CreateTeamRequest $request,
     ): JsonResponse {
         $team = $this->teamService->createTeam($request);
 
-        return $this->json([
-            'id' => $team->getId(),
-            'name' => $team->getName(),
-            'city' => $team->getCity(),
-            'yearFounded' => $team->getYearFounded(),
-            'stadiumName' => $team->getStadiumName(),
-        ], Response::HTTP_CREATED);
+        return $this->json($team->toArray(), Response::HTTP_CREATED);
     }
 
     #[Route('/api/teams', name: 'get_teams', methods: ['GET'])]
     public function getTeams(): JsonResponse
     {
-        $teams = $this->teamService->getAllTeams();
-
-        $teamData = array_map(fn($team) => [
-            'id' => $team->getId(),
-            'name' => $team->getName(),
-            'city' => $team->getCity(),
-            'yearFounded' => $team->getYearFounded(),
-            'stadiumName' => $team->getStadiumName(),
-        ], $teams);
-
-        return $this->json($teamData);
+        return $this->json(
+            $this->teamService->getAllTeams()
+        );
     }
 
     #[Route('/api/teams/{id}', name: 'get_team_by_id', methods: ['GET'])]

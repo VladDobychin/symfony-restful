@@ -63,7 +63,7 @@ class Team
     public function relocateTeam(string $newCity): void
     {
         if (empty($newCity)) {
-            throw new \InvalidArgumentException('City cannot be empty.');
+            throw new InvalidArgumentException('City cannot be empty.');
         }
 
         $oldCity = $this->city;

@@ -27,7 +27,7 @@ class PlayerController extends AbstractController
 
             return $this->json($player->toArray(), Response::HTTP_CREATED);
         } catch (TeamNotFoundException $exception) {
-            return $this->json(['error' => $exception->getMessage()], Response::HTTP_BAD_REQUEST);
+            return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (PlayerLimitExceededException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_CONFLICT);
         }

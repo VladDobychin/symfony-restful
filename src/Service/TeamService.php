@@ -7,14 +7,12 @@ use App\Entity\Team;
 use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\TeamRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class TeamService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private TeamRepository $teamRepository,
         private LoggerInterface $logger,
         private EventDispatcherInterface $eventDispatcher
@@ -30,8 +28,7 @@ class TeamService
             $teamData->getStadiumName()
         );
 
-        $this->entityManager->persist($team);
-        $this->entityManager->flush();
+        $this->teamRepository->saveTeam($team);
 
         $this->logger->info('[Team] created successfully', $team->toArray());
 
@@ -66,11 +63,10 @@ class TeamService
     public function updateTeam(int $id, TeamDTO $teamData): Team
     {
         $team = $this->getTeamById($id);
-        $oldCity = $team->getCity();
 
         $this->applyTeamUpdates($team, $teamData);
 
-        $this->entityManager->flush();
+        $this->teamRepository->saveTeam($team);
 
         $this->logger->info('[Team] was updated successfully', $team->toArray());
 
@@ -125,5 +121,16 @@ class TeamService
         if ($teamData->getYearFounded() !== null) {
             $team->changeYearFounded($teamData->getYearFounded());
         }
+    }
+
+    public function updateTeamAggregate(Team $team): Team
+    {
+        $this->teamRepository->saveTeam($team);
+
+        foreach ($team->popEvents() as $event) {
+            $this->eventDispatcher->dispatch($event);
+        }
+
+        return $team;
     }
 }

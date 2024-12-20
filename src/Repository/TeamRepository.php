@@ -50,4 +50,10 @@ class TeamRepository extends ServiceEntityRepository
         $entityManager->flush();
     }
 
+    public function saveTeam(Team $team): void
+    {
+        $entityManager = $this->getEntityManager();
+        $entityManager->persist($team);
+        $entityManager->flush();
+    }
 }

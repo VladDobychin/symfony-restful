@@ -7,14 +7,12 @@ use App\Entity\Player;
 use App\Exception\PlayerLimitExceededException;
 use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
-use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
 use Psr\Log\LoggerInterface;
 
 class PlayerService
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private TeamService $teamService,
         private LoggerInterface $logger
     ) {
@@ -39,8 +37,7 @@ class PlayerService
             throw new PlayerLimitExceededException();
         }
 
-        $this->entityManager->persist($team);
-        $this->entityManager->flush();
+        $this->teamService->updateTeamAggregate($team);
 
         $this->logger->info('[Player] created successfully', $player->toArray());
 
@@ -74,7 +71,7 @@ class PlayerService
             $player->changePosition($playerData->getPosition());
         }
 
-        $this->entityManager->flush();
+        $this->teamService->updateTeamAggregate($team);
 
         $this->logger->info('[Player] was updated successfully', $player->toArray());
 
@@ -109,7 +106,7 @@ class PlayerService
 
         $team->removePlayer($player);
 
-        $this->entityManager->flush();
+        $this->teamService->updateTeamAggregate($team);
 
         $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
     }

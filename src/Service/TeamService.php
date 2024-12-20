@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\TeamDataInterface;
+use App\DTO\TeamDTO;
 use App\Entity\Team;
 use App\Event\TeamRelocatedEvent;
 use App\Exception\TeamNotFoundException;
@@ -21,13 +22,13 @@ class TeamService
     ) {
     }
 
-    public function createTeam(TeamDataInterface $request): Team
+    public function createTeam(TeamDTO $teamData): Team
     {
         $team = new Team();
-        $team->setName($request->getName())
-            ->setCity($request->getCity())
-            ->setYearFounded($request->getYearFounded())
-            ->setStadiumName($request->getStadiumName());
+        $team->setName($teamData->getName())
+            ->setCity($teamData->getCity())
+            ->setYearFounded($teamData->getYearFounded())
+            ->setStadiumName($teamData->getStadiumName());
 
         $this->entityManager->persist($team);
         $this->entityManager->flush();
@@ -45,6 +46,9 @@ class TeamService
         return array_map(fn($team) => $team->toArray(), $teams);
     }
 
+    /**
+     * @throws TeamNotFoundException
+     */
     public function getTeamById(int $id): Team
     {
         $team = $this->teamRepository->findTeamById($id);
@@ -56,14 +60,16 @@ class TeamService
         return $team;
     }
 
-    // TODO: handle case when no fields are supplied
-    public function updateTeam(int $id, TeamDataInterface $request): Team
+    /**
+     * @throws TeamNotFoundException
+     */
+    public function updateTeam(int $id, TeamDTO $teamData): Team
     {
         $team = $this->getTeamById($id);
 
         $oldCity = $team->getCity();
 
-        $this->applyTeamUpdates($team, $request);
+        $this->applyTeamUpdates($team, $teamData);
 
         $this->entityManager->flush();
 
@@ -76,6 +82,9 @@ class TeamService
         return $team;
     }
 
+    /**
+     * @throws TeamNotFoundException
+     */
     public function deleteTeam(int $id): void
     {
         $team = $this->getTeamById($id);
@@ -87,19 +96,19 @@ class TeamService
         $this->logger->info("Team '{$team->getName()}' with ID: {$id} has been deleted successfully");
     }
 
-    private function applyTeamUpdates(Team $team, TeamDataInterface $request): void
+    private function applyTeamUpdates(Team $team, TeamDTO $teamData): void
     {
-        if ($request->getName() !== null) {
-            $team->setName($request->getName());
+        if ($teamData->getName() !== null) {
+            $team->setName($teamData->getName());
         }
-        if ($request->getCity() !== null) {
-            $team->setCity($request->getCity());
+        if ($teamData->getCity() !== null) {
+            $team->setCity($teamData->getCity());
         }
-        if ($request->getYearFounded() !== null) {
-            $team->setYearFounded($request->getYearFounded());
+        if ($teamData->getYearFounded() !== null) {
+            $team->setYearFounded($teamData->getYearFounded());
         }
-        if ($request->getStadiumName() !== null) {
-            $team->setStadiumName($request->getStadiumName());
+        if ($teamData->getStadiumName() !== null) {
+            $team->setStadiumName($teamData->getStadiumName());
         }
     }
 }

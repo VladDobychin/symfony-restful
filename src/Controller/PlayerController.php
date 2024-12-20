@@ -2,28 +2,35 @@
 
 namespace App\Controller;
 
-use App\Exception\PlayerLimitExceededException;
-use App\Exception\PlayerNotFoundException;
-use App\Exception\TeamNotFoundException;
-use App\Request\{CreatePlayerRequest, UpdatePlayerRequest};
+use App\DTO\PlayerDTO;
+use App\Service\DTOValidationService;
+use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
+use App\Exception\{PlayerLimitExceededException, PlayerNotFoundException, TeamNotFoundException};
 use App\Service\PlayerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 class PlayerController extends AbstractController
 {
-    public function __construct(private PlayerService $playerService)
-    {
+    public function __construct(
+        private PlayerService $playerService,
+        private DTOValidationService $dtoValidationService
+    ) {
     }
 
     #[Route('/api/players', name: 'create_player', methods: ['POST'])]
     public function createPlayer(
-        CreatePlayerRequest $request,
+        Request $request,
     ): JsonResponse {
+        $playerData = PlayerDTO::fromArray($request->toArray());
+
+        $errors = $this->dtoValidationService->validate($playerData, ['create']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
-            $player = $this->playerService->createPlayer($request);
+            $player = $this->playerService->createPlayer($playerData);
 
             return $this->json($player->toArray(), Response::HTTP_CREATED);
         } catch (TeamNotFoundException $exception) {
@@ -48,10 +55,17 @@ class PlayerController extends AbstractController
     #[Route('/api/players/{id}', name: 'update_player', methods: ['PUT'])]
     public function updatePlayer(
         int $id,
-        UpdatePlayerRequest $request,
+        Request $request,
     ): JsonResponse {
+        $playerData = PlayerDTO::fromArray($request->toArray());
+
+        $errors = $this->dtoValidationService->validate($playerData, ['update']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
-            $player = $this->playerService->updatePlayer($id, $request);
+            $player = $this->playerService->updatePlayer($id, $playerData);
 
             return $this->json($player->toArray());
         } catch (PlayerNotFoundException $exception) {

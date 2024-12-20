@@ -2,7 +2,9 @@
 
 namespace App\Exception;
 
-class PlayerLimitExceededException extends ApiException
+use Exception;
+
+class PlayerLimitExceededException extends Exception
 {
     public function __construct(string $message = 'A team cannot have more than 11 players.')
     {

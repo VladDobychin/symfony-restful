@@ -2,10 +2,11 @@
 
 namespace App\Service;
 
-use App\DTO\PlayerDataInterface;
+use App\DTO\PlayerDTO;
 use App\Entity\Player;
 use App\Exception\PlayerLimitExceededException;
 use App\Exception\PlayerNotFoundException;
+use App\Exception\TeamNotFoundException;
 use App\Repository\PlayerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use LogicException;
@@ -21,15 +22,19 @@ class PlayerService
     ) {
     }
 
-    public function createPlayer(PlayerDataInterface $request): Player
+    /**
+     * @throws TeamNotFoundException
+     * @throws PlayerLimitExceededException
+     */
+    public function createPlayer(PlayerDTO $playerData): Player
     {
-        $team = $this->teamService->getTeamById($request->getTeamId());
+        $team = $this->teamService->getTeamById($playerData->getTeamId());
 
         $player = new Player();
-        $player->setFirstName($request->getFirstName())
-            ->setLastName($request->getLastName())
-            ->setAge($request->getAge())
-            ->setPosition($request->getPosition());
+        $player->setFirstName($playerData->getFirstName())
+            ->setLastName($playerData->getLastName())
+            ->setAge($playerData->getAge())
+            ->setPosition($playerData->getPosition());
 
         try {
             $team->addPlayer($player);
@@ -49,7 +54,10 @@ class PlayerService
         }
     }
 
-    public function updatePlayer(int $id, PlayerDataInterface $request): ?Player
+    /**
+     * @throws PlayerNotFoundException
+     */
+    public function updatePlayer(int $id, PlayerDTO $request): ?Player
     {
         $player = $this->getPlayerById($id);
 
@@ -77,15 +85,20 @@ class PlayerService
     }
 
 
+    /**
+     * @throws TeamNotFoundException
+     */
     public function getPlayersByTeam(int $id): array
     {
-        // Throws TeamNotFoundException if the team doesn't exist
         $this->teamService->getTeamById($id);
 
         $players = $this->playerRepository->findPlayersByTeamId($id);
         return array_map(fn($player) => $player->toArray(), $players);
     }
 
+    /**
+     * @throws PlayerNotFoundException
+     */
     public function deletePlayer(int $id): void
     {
         $player = $this->getPlayerById($id);
@@ -97,6 +110,9 @@ class PlayerService
         $this->logger->info("[Player] Player with ID: {$id} has been deleted successfully");
     }
 
+    /**
+     * @throws PlayerNotFoundException
+     */
     public function getPlayerById(int $id): Player
     {
         $player = $this->playerRepository->findPlayerById($id);

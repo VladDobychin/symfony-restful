@@ -2,24 +2,31 @@
 
 namespace App\Controller;
 
+use App\DTO\TeamDTO;
 use App\Exception\TeamNotFoundException;
-use App\Request\{CreateTeamRequest, UpdateTeamRequest};
-use App\Service\{TeamService, PlayerService};
-use Symfony\Component\HttpFoundation\{Response, JsonResponse};
+use App\Service\{DTOValidationService, TeamService, PlayerService};
+use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
 
 class TeamController extends AbstractController
 {
-    public function __construct(private TeamService $teamService)
+    public function __construct(private TeamService $teamService, private DTOValidationService $dtoValidationService)
     {
     }
 
     #[Route('/api/teams', name: 'create_team', methods: ['POST'])]
     public function createTeam(
-        CreateTeamRequest $request,
+        Request $request,
     ): JsonResponse {
-        $team = $this->teamService->createTeam($request);
+        $teamData = TeamDTO::fromArray($request->toArray());
+
+        $errors = $this->dtoValidationService->validate($teamData, ['create']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $team = $this->teamService->createTeam($teamData);
 
         return $this->json($team->toArray(), Response::HTTP_CREATED);
     }
@@ -47,10 +54,17 @@ class TeamController extends AbstractController
     #[Route('/api/teams/{id}', name: 'update_team', methods: ['PUT'])]
     public function updateTeam(
         int $id,
-        UpdateTeamRequest $request
+        Request $request,
     ): JsonResponse {
+        $teamData = TeamDTO::fromArray($request->toArray());
+
+        $errors = $this->dtoValidationService->validate($teamData, ['update']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         try {
-            $team = $this->teamService->updateTeam($id, $request);
+            $team = $this->teamService->updateTeam($id, $teamData);
 
             return $this->json($team->toArray());
         } catch (TeamNotFoundException $exception) {
@@ -84,4 +98,5 @@ class TeamController extends AbstractController
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
     }
+
 }

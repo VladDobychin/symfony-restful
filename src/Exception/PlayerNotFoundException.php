@@ -2,7 +2,9 @@
 
 namespace App\Exception;
 
-class PlayerNotFoundException extends ApiException
+use Exception;
+
+class PlayerNotFoundException extends Exception
 {
     public function __construct(string $message = 'Player not found')
     {

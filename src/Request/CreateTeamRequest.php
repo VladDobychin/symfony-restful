@@ -5,7 +5,7 @@ namespace App\Request;
 use App\DTO\TeamDataInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-class CreateTeamRequest extends AbstractJsonRequest implements TeamDataInterface
+class CreateTeamRequest
 {
     #[Assert\NotBlank]
     #[Assert\Length(

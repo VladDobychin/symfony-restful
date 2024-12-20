@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\TeamDTO;
+use App\DTO\TeamResultDTO;
 use App\Entity\Team;
 use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
@@ -19,7 +20,7 @@ class TeamService
     ) {
     }
 
-    public function createTeam(TeamDTO $teamData): Team
+    public function createTeam(TeamDTO $teamData): TeamResultDTO
     {
         $team = new Team(
             $teamData->getName(),
@@ -32,7 +33,7 @@ class TeamService
 
         $this->logger->info('[Team] created successfully', $team->toArray());
 
-        return $team;
+        return TeamResultDTO::fromEntity($team);
     }
 
     public function getAllTeams(): array
@@ -40,7 +41,10 @@ class TeamService
         $teams = $this->teamRepository
             ->findAllTeams();
 
-        return array_map(fn($team) => $team->toArray(), $teams);
+        return array_map(
+            fn($team) => TeamResultDTO::fromEntity($team)->toArray(),
+            $teams
+        );
     }
 
     /**
@@ -60,7 +64,16 @@ class TeamService
     /**
      * @throws TeamNotFoundException
      */
-    public function updateTeam(int $id, TeamDTO $teamData): Team
+    public function getTeamByIdDTO(int $id): TeamResultDTO
+    {
+        $team = $this->getTeamById($id);
+        return TeamResultDTO::fromEntity($team);
+    }
+
+    /**
+     * @throws TeamNotFoundException
+     */
+    public function updateTeam(int $id, TeamDTO $teamData): TeamResultDTO
     {
         $team = $this->getTeamById($id);
 
@@ -70,7 +83,7 @@ class TeamService
 
         $this->logger->info('[Team] was updated successfully', $team->toArray());
 
-        return $team;
+        return TeamResultDTO::fromEntity($team);
     }
 
     /**

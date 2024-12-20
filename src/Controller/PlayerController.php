@@ -30,9 +30,9 @@ class PlayerController extends AbstractController
         }
 
         try {
-            $player = $this->playerService->createPlayer($playerData);
+            $playerDto = $this->playerService->createPlayer($playerData);
 
-            return $this->json($player->toArray(), Response::HTTP_CREATED);
+            return $this->json($playerDto->toArray(), Response::HTTP_CREATED);
         } catch (TeamNotFoundException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (PlayerLimitExceededException $exception) {
@@ -44,9 +44,9 @@ class PlayerController extends AbstractController
     public function getPlayerById(int $id): JsonResponse
     {
         try {
-            $player = $this->playerService->getPlayerById($id);
+            $playerDto = $this->playerService->getPlayerById($id);
 
-            return $this->json($player->toArray());
+            return $this->json($playerDto->toArray());
         } catch (PlayerNotFoundException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }
@@ -65,9 +65,9 @@ class PlayerController extends AbstractController
         }
 
         try {
-            $player = $this->playerService->updatePlayer($id, $playerData);
+            $playerDto = $this->playerService->updatePlayer($id, $playerData);
 
-            return $this->json($player->toArray());
+            return $this->json($playerDto->toArray());
         } catch (PlayerNotFoundException $exception) {
             return $this->json(['error' => $exception->getMessage()], Response::HTTP_NOT_FOUND);
         }

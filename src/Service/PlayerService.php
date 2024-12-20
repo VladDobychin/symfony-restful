@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\DTO\PlayerDTO;
+use App\DTO\PlayerResultDTO;
 use App\Entity\Player;
 use App\Exception\PlayerLimitExceededException;
 use App\Exception\PlayerNotFoundException;
@@ -22,7 +23,7 @@ class PlayerService
      * @throws TeamNotFoundException
      * @throws PlayerLimitExceededException
      */
-    public function createPlayer(PlayerDTO $playerData): Player
+    public function createPlayer(PlayerDTO $playerData): PlayerResultDTO
     {
         $team = $this->teamService->getTeamById($playerData->getTeamId());
 
@@ -41,13 +42,13 @@ class PlayerService
 
         $this->logger->info('[Player] created successfully', $player->toArray());
 
-        return $player;
+        return PlayerResultDTO::fromEntity($player);
     }
 
     /**
      * @throws PlayerNotFoundException
      */
-    public function updatePlayer(int $id, PlayerDTO $playerData): Player
+    public function updatePlayer(int $id, PlayerDTO $playerData): PlayerResultDTO
     {
         $team = $this->teamService->getTeamByPlayerId($id);
         $player = $team->getPlayerById($id);
@@ -75,7 +76,7 @@ class PlayerService
 
         $this->logger->info('[Player] was updated successfully', $player->toArray());
 
-        return $player;
+        return PlayerResultDTO::fromEntity($player);
     }
 
 
@@ -87,7 +88,10 @@ class PlayerService
         $team = $this->teamService->getTeamById($id);
         $players = $team->getPlayers();
 
-        return array_map(fn($player) => $player->toArray(), $players->toArray());
+        return array_map(
+            fn($player) => PlayerResultDTO::fromEntity($player)->toArray(),
+            $players->toArray()
+        );
     }
 
     /**
@@ -114,7 +118,7 @@ class PlayerService
     /**
      * @throws PlayerNotFoundException
      */
-    public function getPlayerById(int $id): Player
+    public function getPlayerById(int $id): PlayerResultDTO
     {
         $team = $this->teamService->getTeamByPlayerId($id);
         $player = $team->getPlayerById($id);
@@ -123,7 +127,7 @@ class PlayerService
             throw new PlayerNotFoundException("Player with id $id not found");
         }
 
-        return $player;
+        return PlayerResultDTO::fromEntity($player);
     }
 
 }

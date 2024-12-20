@@ -5,14 +5,18 @@ namespace App\Repository;
 use App\Entity\Team;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+
 
 /**
  * @extends ServiceEntityRepository<Team>
  */
-class TeamRepository extends ServiceEntityRepository
+class TeamRepository extends ServiceEntityRepository implements TeamRepositoryInterface
 {
-    public function __construct(ManagerRegistry $registry)
-    {
+    public function __construct(
+        ManagerRegistry $registry,
+        private EventDispatcherInterface $eventDispatcher
+    ) {
         parent::__construct($registry, Team::class);
     }
 
@@ -55,5 +59,14 @@ class TeamRepository extends ServiceEntityRepository
         $entityManager = $this->getEntityManager();
         $entityManager->persist($team);
         $entityManager->flush();
+
+        $this->dispatchDomainEvents($team);
+    }
+
+    private function dispatchDomainEvents(Team $team): void
+    {
+        foreach ($team->popEvents() as $event) {
+            $this->eventDispatcher->dispatch($event);
+        }
     }
 }

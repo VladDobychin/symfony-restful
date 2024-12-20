@@ -70,10 +70,6 @@ class TeamService
 
         $this->logger->info('[Team] was updated successfully', $team->toArray());
 
-        foreach ($team->popEvents() as $event) {
-            $this->eventDispatcher->dispatch($event);
-        }
-
         return $team;
     }
 

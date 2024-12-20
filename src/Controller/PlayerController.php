@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\DTO\PlayerDTO;
+use App\Service\DTOValidationService;
 use Symfony\Component\HttpFoundation\{JsonResponse, Request, Response};
 use App\Exception\{PlayerLimitExceededException, PlayerNotFoundException, TeamNotFoundException};
 use App\Service\PlayerService;
@@ -12,21 +13,21 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PlayerController extends AbstractController
 {
-    public function __construct(private PlayerService $playerService)
-    {
+    public function __construct(
+        private PlayerService $playerService,
+        private DTOValidationService $dtoValidationService
+    ) {
     }
 
     #[Route('/api/players', name: 'create_player', methods: ['POST'])]
     public function createPlayer(
         Request $request,
-        ValidatorInterface $validator
     ): JsonResponse {
-        $data = $request->toArray();
-        $playerData = PlayerDTO::fromArray($data);
+        $playerData = PlayerDTO::fromArray($request->toArray());
 
-        $errors = $validator->validate($playerData, null, ['create']);
-        if (count($errors) > 0) {
-            return $this->handleValidationErrors($errors);
+        $errors = $this->dtoValidationService->validate($playerData, ['create']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
@@ -56,14 +57,12 @@ class PlayerController extends AbstractController
     public function updatePlayer(
         int $id,
         Request $request,
-        ValidatorInterface $validator
     ): JsonResponse {
-        $data = $request->toArray();
-        $playerData = PlayerDTO::fromArray($data);
+        $playerData = PlayerDTO::fromArray($request->toArray());
 
-        $errors = $validator->validate($playerData, null, ['update']);
-        if (count($errors) > 0) {
-            return $this->handleValidationErrors($errors);
+        $errors = $this->dtoValidationService->validate($playerData, ['update']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
@@ -87,17 +86,4 @@ class PlayerController extends AbstractController
         }
     }
 
-    private function handleValidationErrors($violations): JsonResponse
-    {
-        $errors = [];
-        foreach ($violations as $violation) {
-            $errors[] = [
-                'property' => $violation->getPropertyPath(),
-                'value' => $violation->getInvalidValue(),
-                'message' => $violation->getMessage(),
-            ];
-        }
-
-        return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
-    }
 }

@@ -5,28 +5,26 @@ namespace App\Controller;
 use App\DTO\TeamDTO;
 use App\Exception\TeamNotFoundException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Service\{TeamService, PlayerService};
+use App\Service\{DTOValidationService, TeamService, PlayerService};
 use Symfony\Component\HttpFoundation\{Request, Response, JsonResponse};
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
 
 class TeamController extends AbstractController
 {
-    public function __construct(private TeamService $teamService)
+    public function __construct(private TeamService $teamService, private DTOValidationService $dtoValidationService)
     {
     }
 
     #[Route('/api/teams', name: 'create_team', methods: ['POST'])]
     public function createTeam(
         Request $request,
-        ValidatorInterface $validator
     ): JsonResponse {
-        $data = $request->toArray();
-        $teamData = TeamDTO::fromArray($data);
+        $teamData = TeamDTO::fromArray($request->toArray());
 
-        $errors = $validator->validate($teamData, null, ['create']);
-        if (count($errors) > 0) {
-            return $this->handleValidationErrors($errors);
+        $errors = $this->dtoValidationService->validate($teamData, ['create']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $team = $this->teamService->createTeam($teamData);
@@ -58,14 +56,12 @@ class TeamController extends AbstractController
     public function updateTeam(
         int $id,
         Request $request,
-        ValidatorInterface $validator
     ): JsonResponse {
-        $data = $request->toArray();
-        $teamData = TeamDTO::fromArray($data);
+        $teamData = TeamDTO::fromArray($request->toArray());
 
-        $errors = $validator->validate($teamData, null, ['update']);
-        if (count($errors) > 0) {
-            return $this->handleValidationErrors($errors);
+        $errors = $this->dtoValidationService->validate($teamData, ['update']);
+        if (!empty($errors)) {
+            return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         try {
@@ -104,17 +100,4 @@ class TeamController extends AbstractController
         }
     }
 
-    private function handleValidationErrors($violations): JsonResponse
-    {
-        $errors = [];
-        foreach ($violations as $violation) {
-            $errors[] = [
-                'property' => $violation->getPropertyPath(),
-                'value' => $violation->getInvalidValue(),
-                'message' => $violation->getMessage(),
-            ];
-        }
-
-        return $this->json(['errors' => $errors], Response::HTTP_UNPROCESSABLE_ENTITY);
-    }
 }

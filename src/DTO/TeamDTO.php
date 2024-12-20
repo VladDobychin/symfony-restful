@@ -108,7 +108,7 @@ class TeamDTO
 
     public function getYearFounded(): ?int
     {
-        return (int)$this->yearFounded;
+        return $this->yearFounded !== null ? (int) $this->yearFounded : null;
     }
 
     public function getStadiumName(): ?string

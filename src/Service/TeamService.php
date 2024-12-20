@@ -2,10 +2,9 @@
 
 namespace App\Service;
 
-use App\DTO\TeamDataInterface;
 use App\DTO\TeamDTO;
 use App\Entity\Team;
-use App\Event\TeamRelocatedEvent;
+use App\Exception\PlayerNotFoundException;
 use App\Exception\TeamNotFoundException;
 use App\Repository\TeamRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,11 +23,12 @@ class TeamService
 
     public function createTeam(TeamDTO $teamData): Team
     {
-        $team = new Team();
-        $team->setName($teamData->getName())
-            ->setCity($teamData->getCity())
-            ->setYearFounded($teamData->getYearFounded())
-            ->setStadiumName($teamData->getStadiumName());
+        $team = new Team(
+            $teamData->getName(),
+            $teamData->getCity(),
+            $teamData->getYearFounded(),
+            $teamData->getStadiumName()
+        );
 
         $this->entityManager->persist($team);
         $this->entityManager->flush();
@@ -66,7 +66,6 @@ class TeamService
     public function updateTeam(int $id, TeamDTO $teamData): Team
     {
         $team = $this->getTeamById($id);
-
         $oldCity = $team->getCity();
 
         $this->applyTeamUpdates($team, $teamData);
@@ -75,8 +74,21 @@ class TeamService
 
         $this->logger->info('[Team] was updated successfully', $team->toArray());
 
-        if ($team->getCity() !== $oldCity) {
-            $this->eventDispatcher->dispatch(new TeamRelocatedEvent($team->getId(), $oldCity));
+        foreach ($team->popEvents() as $event) {
+            $this->eventDispatcher->dispatch($event);
+        }
+
+        return $team;
+    }
+
+    /**
+     * @throws PlayerNotFoundException
+     */
+    public function getTeamByPlayerId(int $playerId): Team
+    {
+        $team = $this->teamRepository->findTeamByPlayerId($playerId);
+        if (!$team) {
+            throw new PlayerNotFoundException("Player with id $playerId not found");
         }
 
         return $team;
@@ -99,16 +111,19 @@ class TeamService
     private function applyTeamUpdates(Team $team, TeamDTO $teamData): void
     {
         if ($teamData->getName() !== null) {
-            $team->setName($teamData->getName());
+            $team->renameTeam($teamData->getName());
         }
-        if ($teamData->getCity() !== null) {
-            $team->setCity($teamData->getCity());
+
+        if ($teamData->getCity() !== null ) {
+            $team->relocateTeam($teamData->getCity());
         }
+
+        if ($teamData->getStadiumName() !== null ) {
+            $team->changeStadium($teamData->getStadiumName());
+        }
+
         if ($teamData->getYearFounded() !== null) {
-            $team->setYearFounded($teamData->getYearFounded());
-        }
-        if ($teamData->getStadiumName() !== null) {
-            $team->setStadiumName($teamData->getStadiumName());
+            $team->changeYearFounded($teamData->getYearFounded());
         }
     }
 }

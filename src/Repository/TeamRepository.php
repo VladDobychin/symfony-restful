@@ -33,6 +33,16 @@ class TeamRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function findTeamByPlayerId(int $playerId): ?Team
+    {
+        return $this->createQueryBuilder('t')
+            ->join('t.players', 'p')
+            ->andWhere('p.id = :playerId')
+            ->setParameter('playerId', $playerId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function deleteTeam(Team $team): void
     {
         $entityManager = $this->getEntityManager();
